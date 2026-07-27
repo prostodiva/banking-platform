@@ -14,6 +14,7 @@ function App() {
   return (
     <div>
       <p>Backend says: {message}</p>
+      <h1>How are you</h1>
     </div>
   );
 }

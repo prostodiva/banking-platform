@@ -1,4 +1,4 @@
-package com.bank_app.bank_app;
+package com.bankapp.shared.web;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

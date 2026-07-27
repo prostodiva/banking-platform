@@ -1,0 +1,61 @@
+# Local development INFRASTRUCTURE only — the apps run natively for hot reload:
+#   backend:  cd packages/backend/bank-app && mvn spring-boot:run   (DevTools)
+#   frontend: cd packages/frontend && npm run dev                   (Vite)
+#
+# Usage:
+#   cp .env.example .env          (first time only; .env is gitignored)
+#   docker compose up -d                    → postgres only
+#   docker compose --profile cache up -d    → + redis   (when caching features arrive)
+#   docker compose --profile events up -d   → + kafka   (when event-driven features arrive)
+#
+# App Dockerfiles (multi-stage maven→JRE and node→nginx builds) plus a full-stack
+# compose file will be added once the backend has real features to containerize.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: bankapp-postgres
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bankapp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-bankapp}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bankapp} -d ${POSTGRES_DB:-bankapp}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+    container_name: bankapp-redis
+    profiles: ["cache"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  kafka:
+    image: apache/kafka:4.1.0
+    container_name: bankapp-kafka
+    profiles: ["events"]
+    ports:
+      - "${KAFKA_PORT:-9092}:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+volumes:
+  postgres-data:

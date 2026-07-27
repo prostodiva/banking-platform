@@ -60,3 +60,37 @@ using Vite proxy (http://localhost:5173/api/* will be proxied to http://localhos
 
 localhost:8080/api/ping or localhost:5173
 recieve "pong" from backend server
+
+## Spring-Boot DevTools
+
+picks up changes without restarting
+download dependency from Maven Central
+
+## Docker (local infrastructure)
+
+Apps run natively (DevTools / Vite hot reload); only infrastructure runs in Docker.
+
+```
+cp .env.example .env          # first time only; .env is gitignored
+docker compose up -d          # postgres
+docker compose --profile cache up -d    # + redis (later)
+docker compose --profile events up -d   # + kafka (later)
+```
+
+App Dockerfiles (multi-stage builds) and a full-stack compose file come later,
+once there are real features to containerize.
+
+## Frontend state management (planned)
+
+Redux Toolkit + RTK Query, added when the first feature is built:
+
+```
+npm install @reduxjs/toolkit react-redux
+```
+
+- one `baseApi` (createApi + fetchBaseQuery("/api")) in `src/shared/api/`
+- each feature injects its own endpoints via `baseApi.injectEndpoints` and keeps
+  its `slice.ts` / `api.ts` / `types.ts` inside `src/features/<name>/`
+- store wiring lives in `src/app/store.ts`
+
+Structure details: docs/08-system-architecture.md
