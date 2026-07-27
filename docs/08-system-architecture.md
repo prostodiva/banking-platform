@@ -15,6 +15,7 @@ Repository - data access
 Model/Entity - Data
 
 I will organize development by vertical slices(features) and will keep the horizontal layers inside of each feature slice.
+DDD + Hexagonal Architecture (Ports and Adapters) inside each vertical slice
 
 ## DDD - Domain Driven Design
 
@@ -70,7 +71,8 @@ Tests mirror the slices: `src/test/java/com/bankapp/accounts/...`
 1. Slices talk via events or application-service interfaces — never via each
    other's repositories or entities. Payments never imports `accounts.domain.Account`.
 2. Dependency direction inside a slice: `api → application → domain ← infrastructure`.
-   Domain has zero framework imports.
+   Domain has no framework *behavior*: no Spring imports, no Spring Data types.
+   JPA mapping annotations on aggregates are tolerated as inert metadata (ADR-002).
 3. Repository pattern: interface in `domain/`, JPA implementation in
    `infrastructure/persistence/`.
 4. `shared/` is a shared kernel, not a dumping ground — value objects and

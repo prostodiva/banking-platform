@@ -58,7 +58,8 @@ Backend:
 - java 21
 - Spring Boot
 - Spring Security
-- Spring Dara JPA
+- Spring Data JPA
+- Flyway(runs missing migrations)
 - Hibernate
 
 Database:
