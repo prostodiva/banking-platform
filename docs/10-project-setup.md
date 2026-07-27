@@ -70,6 +70,8 @@ download dependency from Maven Central
 
 Apps run natively (DevTools / Vite hot reload); only infrastructure runs in Docker.
 
+in the project root, create docker-compose.yml
+
 ```
 cp .env.example .env          # first time only; .env is gitignored
 docker compose up -d          # postgres
