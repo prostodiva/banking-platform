@@ -100,6 +100,10 @@ Structure details: docs/08-system-architecture.md
 ## Backend Dependencies
 
 - spring-boot-starter-data-jpa (maps java entities to database tables)
+
+> JPA (Jakarta Persistence API) is a specification: a set of Java interfaces and annotations (@Entity, @Id, @Column, @Table, @Version, EntityManager...) that define a standard way to say "this Java object corresponds to this database row." It answers one question: how do objects get in and out of tables?
+> JPA itself does nothing — it's just interfaces. Hibernate is the implementation that actually does the work (generates SQL, tracks which fields changed, manages the connection). When Spring Boot autoconfigures JPA, it's really wiring up Hibernate underneath.
+
 - spring-boot-starter-validation (Bean validation on DTOs)
 - spring-boot-starter-flyway (database migrations)
 - flyway-database-postgresql (PostgreSQL database driver for Flyway)

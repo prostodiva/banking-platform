@@ -42,7 +42,7 @@ Worked example with full explanations: [docs/13-slice-1-walkthrough.md](13-slice
 - REST: plural resources (`/api/accounts`), state transitions as POST on a
   sub-resource (`POST /api/accounts/{id}/freeze`), 201 + Location on create.
 
-## Layer rules (enforced by convention, later by ArchUnit)
+## Layer rules (enforced by ArchitectureTest — docs/13 stage 6)
 
 - `api → application → domain ← infrastructure`; nothing imports `api`.
 - Domain: JPA mapping annotations allowed, no framework *behavior*

@@ -11,6 +11,106 @@ tutorials online show Boot 3.x names that no longer work (noted where relevant).
 
 ---
 
+## Story-first workflow — GitHub Issues (runs BEFORE the docs pass)
+
+Stories are work-in-flight planning artifacts — they live in the issue tracker,
+not in `docs/`. The durable residue of a finished story is the docs/02 FR entry
+and the tests. Layering: **GitHub issue** (why, for whom, when it's done) →
+**docs/02 FR** (durable contract, with ID) → **e2e test** (proof). Same fact,
+three lifecycles, no duplication.
+
+Per slice:
+
+1. **Milestone per slice** (Issues → Milestones): e.g. `Slice 2 — Accounts:
+   Freeze / Unfreeze / Close`. The milestone is the epic — no sprints, no
+   story points; that would be cosplay for a solo project.
+2. **Story issue(s) first, before docs and code.** Slice 1's main story,
+   written the way it should have been:
+
+   > **Title:** Customer can open a bank account
+   > **Labels:** `story`, `slice:accounts` · **Milestone:** Slice 1
+   >
+   > ```markdown
+   > ## Story
+   > As a customer, I want to open a checking or savings account
+   > so that I can start keeping money at the bank.
+   >
+   > ## Acceptance criteria
+   > - [ ] POST /api/accounts with owner, type, currency → 201 + Location
+   > - [ ] New account starts ACTIVE with zero balance in requested currency
+   > - [ ] Account number unique, 10 digits, not guessable
+   > - [ ] Missing/invalid fields → 400 with problem details
+   > - [ ] Unknown owner → 409
+   > - [ ] AccountOpened event published
+   >
+   > ## Traceability
+   > FR-ACC-01 (docs/02) · to be covered by OpenAccountE2ETest
+   >
+   > ## Tasks
+   > - [ ] Flyway migrations
+   > - [ ] Money VO + Account aggregate + domain tests
+   > - [ ] Handler + ports + adapters
+   > - [ ] Controller + DTOs + error handling
+   > - [ ] E2E tests
+   > ```
+
+   The acceptance criteria are the same facts as the FR entry and the
+   checkpoints — the story is where they get *invented*; docs/02 is where
+   they become the contract; the test is where they become proof.
+3. **Docs-first pass** (next section) — derive the FR entry from your own
+   acceptance criteria, then 04/05/06.
+4. **Branch per story** — the issue page's "Create a branch" button, or
+   `git switch -c feat/accounts-freeze-account`. Commits reference the issue:
+   `feat(accounts): add freeze transition (#12)`.
+5. **PR with `Closes #12`, even solo.** Self-review the diff in the PR view,
+   let CI run (once it exists), merge — issue auto-closes, milestone ticks.
+   A history of tidy PRs with linked issues is a strong hiring signal.
+6. **Close the milestone when the slice ships.** Anything discovered mid-slice
+   but out of scope (e.g. "AccountNumber should be a real VO") becomes a new
+   labeled issue — a parking lot, not scope creep.
+
+Terminal equivalents: `gh issue create --milestone "Slice 2" --label story`,
+`gh pr create`.
+
+---
+
+## Docs-first workflow — do this before coding ANY slice
+
+Reference checklist for every slice (slice 2 onward: run it yourself, in order,
+*before* opening the IDE). Each step is minutes, not hours — if an entry grows
+past ~5 lines it's trying to be a design doc; the design belongs in 04/05/06.
+
+1. **docs/02 functional requirements** — a few lines per use case:
+   `ID / actor / trigger / preconditions / postconditions / error cases /
+   covering tests`. This slice's entries are already there as the worked
+   example — see **FR-ACC-01 Open account** and **FR-ACC-02 View account** in
+   docs/02. The ID matters: e2e tests reference it — that closes the
+   requirement → test traceability loop. (Slice 2 continues the numbering:
+   FR-ACC-03 Freeze account.)
+2. **docs/03 NFR** — written once, cross-cutting; NFR-01…08 are filled in
+   (money exactness, optimistic locking, auditability, no auto-DDL, …), each
+   naming the mechanism that enforces it. Touch per slice only when a new
+   concern appears (payments will add idempotency; freeze adds nothing).
+3. **docs/04 domain model** — new invariants, state transitions, events for the
+   aggregate this slice touches.
+4. **docs/05 api spec** — endpoint, request/response shape, status codes. One
+   table row per endpoint is enough until OpenAPI generation exists.
+5. **docs/06 event model** — new events: fields, publisher, expected consumers.
+6. **ADR (docs/adr/)** — only if the slice forces a genuinely new architectural
+   decision. Most slices don't; payments will (idempotency strategy).
+7. **Code**, following the docs/11 checklists, docs open beside you.
+8. **Loop back** — if implementation taught you the docs were wrong, fix the
+   docs. A doc that disagrees with the code is worse than no doc.
+
+(For slice 1, docs/02 and docs/03 were backfilled after the fact — the
+acceptance criteria first lived implicitly in this tutorial's checkpoints:
+"201 + Location", "400 on missing fields", "409 on unknown owner". Compare
+FR-ACC-01 in docs/02 against Checkpoint 4 and you'll see they're the same
+facts in two forms. For slice 2, write FR-ACC-03 *first* and derive your
+checkpoints from it — that's the docs-first direction.)
+
+---
+
 ## The map — read this first
 
 The request flow you are about to build:
@@ -1310,6 +1410,106 @@ Expected: all tests green (`AccountTest`, `BankAppApplicationTests`,
 `OpenAccountE2ETest`). Prove the isolation: stop the dev database with
 `docker compose stop postgres` and run `./mvnw test` again — still green,
 because tests bring their own Postgres. Then `docker compose start postgres`.
+
+---
+
+## Stage 6 (optional but recommended) — ArchUnit: the architecture as a test
+
+ADR-002 keeps JPA annotations on the aggregate and promises in exchange that
+the *real* rule — no framework behavior in domain, no cross-slice coupling —
+is enforced mechanically. This stage delivers that promise: the layer rules
+from docs/08 become a failing build instead of a code-review hope.
+
+### 6a. `pom.xml` — one more test dependency
+
+```xml
+<dependency>
+    <groupId>com.tngtech.archunit</groupId>
+    <artifactId>archunit-junit5</artifactId>
+    <version>1.4.1</version>
+    <scope>test</scope>
+</dependency>
+```
+
+Note the explicit `<version>`: ArchUnit is **not** managed by the Spring Boot
+BOM (compare with stage 1a, where the parent supplied every version). This is
+what "unmanaged dependency" means in practice.
+
+### 6b. `src/test/java/com/bankapp/ArchitectureTest.java`
+
+```java
+package com.bankapp;
+
+import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.importer.ImportOption;
+import com.tngtech.archunit.junit.AnalyzeClasses;
+import com.tngtech.archunit.junit.ArchTest;
+import com.tngtech.archunit.lang.ArchRule;
+
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
+
+@AnalyzeClasses(packages = "com.bankapp", importOptions = ImportOption.DoNotIncludeTests.class)
+class ArchitectureTest {
+
+    @ArchTest
+    static final ArchRule domain_has_no_framework_behavior =
+            noClasses().that().resideInAPackage("..domain..")
+                    .should().dependOnClassesThat()
+                    .resideInAnyPackage("org.springframework..", "jakarta.transaction..");
+
+    @ArchTest
+    static final ArchRule domain_does_not_depend_on_outer_layers =
+            noClasses().that().resideInAPackage("..domain..")
+                    .should().dependOnClassesThat()
+                    .resideInAnyPackage("..application..", "..api..", "..infrastructure..");
+
+    @ArchTest
+    static final ArchRule slices_do_not_depend_on_each_other =
+            slices().matching("com.bankapp.(*)..")
+                    .should().notDependOnEachOther()
+                    .ignoreDependency(
+                            DescribedPredicate.alwaysTrue(),
+                            JavaClass.Predicates.resideInAnyPackage("com.bankapp.shared.."));
+}
+```
+
+**Syntax notes**
+- ArchUnit reads compiled **bytecode** — no Spring context, no database; these
+  run as fast as `AccountTest`.
+- `@ArchTest` fields replace `@Test` methods; snake_case names are the ArchUnit
+  community idiom (they read like sentences in failure reports).
+- Rule 1 is the ADR-002 boundary: `jakarta.persistence` annotations stay legal
+  in `..domain..`, but any `org.springframework.*` dependency fails the build.
+- Rule 2 is the Clean Architecture dependency rule — arrows point inward only.
+- Rule 3: `(*)` captures each top-level package (accounts, payments, …) as a
+  "slice" and forbids dependencies between them. The `ignoreDependency(...)`
+  clause exempts the shared kernel — every slice may use `shared`, and that must
+  not count as coupling.
+- `DoNotIncludeTests` keeps test classes (like `TestcontainersConfiguration`)
+  out of the analysis.
+
+### ✅ Checkpoint 6 — and prove it actually guards
+
+```bash
+./mvnw test -Dtest=ArchitectureTest
+```
+
+Expected: 3 rules, all green. Now **make it fail on purpose** — temporarily add
+to `Account.java`:
+
+```java
+import org.springframework.stereotype.Component;
+
+@Component   // sabotage: framework behavior inside the domain
+```
+
+Re-run: rule 1 fails and the message names the class, the illegal dependency,
+and the rule that was violated. Read that failure message carefully — it's what
+a teammate would see in CI after an innocent-looking refactor. Revert the
+sabotage, re-run green. From now on `./mvnw test` guards the architecture on
+every build.
 
 ---
 
