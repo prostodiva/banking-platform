@@ -157,6 +157,18 @@ spring.jpa.open-in-view=false
 **Syntax notes**
 - `${POSTGRES_PORT:5432}` = "use env var `POSTGRES_PORT`, default to `5432`".
   Dev defaults in properties are fine; production supplies real env vars.
+- **Where does my `.env` password go? Nowhere in this file.** Spring Boot does
+  NOT read `.env` — that file is read by *docker compose*, which sets the
+  container's password on first initialization of the volume. Spring reads the
+  *shell environment*. The two sides must simply agree:
+  - If your `.env` keeps the example password, the fallback default here
+    already matches — done.
+  - If you changed it, load `.env` into your shell before starting the app:
+    `set -a; source ../../../.env; set +a; ./mvnw spring-boot:run`
+  - Never put a real password after the `:` in this file — it's committed to
+    git. Only the throwaway fallback lives here; real values arrive via env.
+  - Changed `.env` *after* Postgres first ran? The old password is baked into
+    the volume — `docker compose down -v && docker compose up -d` resets it.
 - `ddl-auto=validate` is the professional setting. `update`/`create` let Hibernate
   mutate your schema — never acceptable for a bank. If entity and table disagree,
   the app **fails at startup** with a clear error. That's a feature: you find out

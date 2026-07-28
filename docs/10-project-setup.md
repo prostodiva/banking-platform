@@ -17,8 +17,8 @@ clean will remove the target directory before compiling
 
 ### launching HTTP server
 
-- using dependency Spring Web (manage inside pom.xml)
-  (https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web)
+- using dependency Spring WebMvc(manage inside pom.xml)
+  (spring-boot-starter-webmvc)
   use the same version as spring boot starter parent
 
 HTTP server - Tomcat is running on port 8080
@@ -96,3 +96,14 @@ npm install @reduxjs/toolkit react-redux
 - store wiring lives in `src/app/store.ts`
 
 Structure details: docs/08-system-architecture.md
+
+## Backend Dependencies
+
+- spring-boot-starter-data-jpa (maps java entities to database tables)
+- spring-boot-starter-validation (Bean validation on DTOs)
+- spring-boot-starter-flyway (database migrations)
+- flyway-database-postgresql (PostgreSQL database driver for Flyway)
+- JDBC Driver (PostgreSQL)
+- spring-boot-testcontainers (Testcontainers for integration testing)
+- testcontainers-postgresql (PostgreSQL Testcontainer)
+- spring-boot-resttestclient
