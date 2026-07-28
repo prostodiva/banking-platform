@@ -21,9 +21,19 @@ three lifecycles, no duplication.
 
 Per slice:
 
-1. **Milestone per slice** (Issues → Milestones): e.g. `Slice 2 — Accounts:
-   Freeze / Unfreeze / Close`. The milestone is the epic — no sprints, no
-   story points; that would be cosplay for a solo project.
+1. **Milestone per slice** (Issues → Milestones): `Slice 1 — Accounts: Open
+   Account` (next one: `Slice 2 — Accounts: Freeze / Unfreeze / Close`). The
+   milestone is the epic — no sprints, no story points; that would be cosplay
+   for a solo project. Slice 1 started before this workflow existed — backfill
+   it: create the milestone and issues now, tick acceptance criteria as the
+   stage checkpoints pass.
+
+   *Terminology:* "slice" here means a **work increment** — one thin
+   end-to-end cut (story → docs → domain → api → tests). That's different
+   from the architectural sense in docs/08, where a slice = a bounded-context
+   package. Most work increments land *inside* an existing context: Slice 2
+   adds use cases to `accounts`, it does not create a new package. The
+   milestone name carries both: `Slice <n> — <Context>: <use cases>`.
 2. **Story issue(s) first, before docs and code.** Slice 1's main story,
    written the way it should have been:
 
@@ -58,18 +68,27 @@ Per slice:
    checkpoints — the story is where they get *invented*; docs/02 is where
    they become the contract; the test is where they become proof.
 3. **Docs-first pass** (next section) — derive the FR entry from your own
-   acceptance criteria, then 04/05/06.
+   acceptance criteria: the story above became **FR-ACC-01** in docs/02, then
+   docs/04 (Account invariants), docs/05 (the two endpoint rows), docs/06
+   (AccountOpened).
 4. **Branch per story** — the issue page's "Create a branch" button, or
-   `git switch -c feat/accounts-freeze-account`. Commits reference the issue:
-   `feat(accounts): add freeze transition (#12)`.
-5. **PR with `Closes #12`, even solo.** Self-review the diff in the PR view,
+   `git switch -c feat/accounts-open-account`. Commits reference the issue:
+   `feat(accounts): add Account aggregate and Money value object (#1)`.
+5. **PR with `Closes #1`, even solo.** Self-review the diff in the PR view,
    let CI run (once it exists), merge — issue auto-closes, milestone ticks.
    A history of tidy PRs with linked issues is a strong hiring signal.
-6. **Close the milestone when the slice ships.** Anything discovered mid-slice
-   but out of scope (e.g. "AccountNumber should be a real VO") becomes a new
-   labeled issue — a parking lot, not scope creep.
+   *(Slice 1 backfill reality: the early stages were committed straight to
+   main before this workflow existed — that history stays as it is. Either
+   branch from the current stage onward and PR the rest, or simply tick and
+   close the issues manually at the final checkpoint; slice 2 runs the full
+   branch → PR cycle from the start.)*
+6. **Close the milestone when the slice ships** — for slice 1 that's after
+   Checkpoint 5 (or 6 with ArchUnit) is green. Anything discovered mid-slice
+   but out of scope (e.g. "AccountNumber should be a real VO",
+   an idea already parked in this doc's exercises) becomes a new labeled
+   issue — a parking lot, not scope creep.
 
-Terminal equivalents: `gh issue create --milestone "Slice 2" --label story`,
+Terminal equivalents: `gh issue create --milestone "Slice 1" --label story`,
 `gh pr create`.
 
 ---
