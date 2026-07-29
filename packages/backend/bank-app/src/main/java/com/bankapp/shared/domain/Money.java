@@ -5,6 +5,9 @@ import java.math.BigDecimal;
 
 @Embeddable
 public record Money(BigDecimal amount, String currencyCode) {
+    /** Storage scale — matches the numeric(19,4) columns money is persisted in. */
+    private static final int SCALE = 4;
+
     public Money {
         if (amount == null) {
             throw new IllegalArgumentException("amount is required");
@@ -14,11 +17,15 @@ public record Money(BigDecimal amount, String currencyCode) {
                 "currencyCode must be a 3-letter ISO code"
             );
         }
-        if (amount.scale() > 4) {
+        if (amount.scale() > SCALE) {
             throw new IllegalArgumentException(
                 "amount supports at most 4 decimal places"
             );
         }
+        // Normalize scale so equal amounts are equal objects: BigDecimal.equals
+        // compares scale, so without this 0 != 0.0000 and Money would break the
+        // core value-object contract (and every DB round-trip comparison).
+        amount = amount.setScale(SCALE);
     }
 
     public static Money zero(String currencyCode) {
