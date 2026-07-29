@@ -22,18 +22,19 @@ three lifecycles, no duplication.
 Per slice:
 
 1. **Milestone per slice** (Issues → Milestones): `Slice 1 — Accounts: Open
-   Account` (next one: `Slice 2 — Accounts: Freeze / Unfreeze / Close`). The
+Account` (next one: `Slice 2 — Accounts: Freeze / Unfreeze / Close`). The
    milestone is the epic — no sprints, no story points; that would be cosplay
    for a solo project. Slice 1 started before this workflow existed — backfill
    it: create the milestone and issues now, tick acceptance criteria as the
    stage checkpoints pass.
 
-   *Terminology:* "slice" here means a **work increment** — one thin
+   _Terminology:_ "slice" here means a **work increment** — one thin
    end-to-end cut (story → docs → domain → api → tests). That's different
    from the architectural sense in docs/08, where a slice = a bounded-context
-   package. Most work increments land *inside* an existing context: Slice 2
+   package. Most work increments land _inside_ an existing context: Slice 2
    adds use cases to `accounts`, it does not create a new package. The
    milestone name carries both: `Slice <n> — <Context>: <use cases>`.
+
 2. **Story issue(s) first, before docs and code.** Slice 1's main story,
    written the way it should have been:
 
@@ -42,10 +43,12 @@ Per slice:
    >
    > ```markdown
    > ## Story
+   >
    > As a customer, I want to open a checking or savings account
    > so that I can start keeping money at the bank.
    >
    > ## Acceptance criteria
+   >
    > - [ ] POST /api/accounts with owner, type, currency → 201 + Location
    > - [ ] New account starts ACTIVE with zero balance in requested currency
    > - [ ] Account number unique, 10 digits, not guessable
@@ -54,9 +57,11 @@ Per slice:
    > - [ ] AccountOpened event published
    >
    > ## Traceability
+   >
    > FR-ACC-01 (docs/02) · to be covered by OpenAccountE2ETest
    >
    > ## Tasks
+   >
    > - [ ] Flyway migrations
    > - [ ] Money VO + Account aggregate + domain tests
    > - [ ] Handler + ports + adapters
@@ -65,7 +70,7 @@ Per slice:
    > ```
 
    The acceptance criteria are the same facts as the FR entry and the
-   checkpoints — the story is where they get *invented*; docs/02 is where
+   checkpoints — the story is where they get _invented_; docs/02 is where
    they become the contract; the test is where they become proof.
 
    Slice 1's second story (small ones don't need every section verbose):
@@ -75,17 +80,21 @@ Per slice:
    >
    > ```markdown
    > ## Story
+   >
    > As a customer, I want to view an account's details
    > so that I can check its status and balance.
    >
    > ## Acceptance criteria
+   >
    > - [ ] GET /api/accounts/{id} → 200 with account details
    > - [ ] Unknown account id → 404
    >
    > ## Traceability
+   >
    > FR-ACC-02 (docs/02) · to be covered by OpenAccountE2ETest
    >
    > ## Tasks
+   >
    > - [ ] GetAccountHandler + AccountView
    > - [ ] GET endpoint on AccountController
    > - [ ] E2E test: happy path + 404
@@ -98,13 +107,14 @@ Per slice:
    contract in step 3. A story doesn't need to match an existing FR — it
    creates one.
 
-   *(Slice 1 backfill note: both stories above describe code that was
+   _(Slice 1 backfill note: both stories above describe code that was
    already built earlier in this tutorial. When creating these issues for a
    slice already in progress, tick the acceptance criteria as already-met
    rather than treating them as pending — the issue is closing a
    traceability gap, not queuing new work. Once you have the real issue
    number, update the draft PR body — `Closes #1, Closes #2` — and reference
-   it in the relevant commit, same as `(#1)` below.)*
+   it in the relevant commit, same as `(#1)` below.)_
+
 3. **Docs-first pass** (next section) — derive the FR entry from your own
    acceptance criteria: the story above became **FR-ACC-01** in docs/02, then
    docs/04 (Account invariants), docs/05 (the two endpoint rows), docs/06
@@ -137,7 +147,7 @@ Per slice:
    **Keeping a reference doc (like this file) current on `main` mid-slice.**
    Doc-only edits made while you're mid-branch (e.g. improving this very
    walkthrough) don't have to wait for the story's PR to merge — that's
-   exactly *why* code and docs get committed separately (above): a docs-only
+   exactly _why_ code and docs get committed separately (above): a docs-only
    commit touches no files the code commits touch, so it can be cherry-picked
    onto `main` immediately with zero conflict risk, independent of how far
    along the code is.
@@ -154,7 +164,7 @@ Per slice:
    git switch feat/accounts-open-account   # back to where you left off
    ```
 
-   Why it's safe: cherry-pick reapplies *only* that commit's diff — nothing
+   Why it's safe: cherry-pick reapplies _only_ that commit's diff — nothing
    else from the branch comes along. When the feature branch's PR eventually
    merges, `main` already has that exact content, so git treats it as a
    no-op for that file — no conflict, even though the same logical change
@@ -179,7 +189,7 @@ Per slice:
    gh pr ready        # draft → ready for review
    ```
 
-   Self-review the full diff in the PR view (you *will* find something), then:
+   Self-review the full diff in the PR view (you _will_ find something), then:
 
    ```bash
    gh pr merge --squash --delete-branch
@@ -194,10 +204,11 @@ Per slice:
    git switch main && git pull
    ```
 
-   *(Slice 1 backfill reality: the early stages were committed straight to
+   _(Slice 1 backfill reality: the early stages were committed straight to
    main before this workflow existed — that history stays as it is. Branch
    from the current stage onward and PR the rest; slice 2 runs the full
-   cycle from the start.)*
+   cycle from the start.)_
+
 6. **Close the milestone when the slice ships** — for slice 1 that's after
    Checkpoint 5 (or 6 with ArchUnit) is green. Anything discovered mid-slice
    but out of scope (e.g. "AccountNumber should be a real VO",
@@ -212,12 +223,12 @@ Terminal equivalents: `gh issue create --milestone "Slice 1" --label story`,
 ## Docs-first workflow — do this before coding ANY slice
 
 Reference checklist for every slice (slice 2 onward: run it yourself, in order,
-*before* opening the IDE). Each step is minutes, not hours — if an entry grows
+_before_ opening the IDE). Each step is minutes, not hours — if an entry grows
 past ~5 lines it's trying to be a design doc; the design belongs in 04/05/06.
 
 1. **docs/02 functional requirements** — a few lines per use case:
    `ID / actor / trigger / preconditions / postconditions / error cases /
-   covering tests`. This slice's entries are already there as the worked
+covering tests`. This slice's entries are already there as the worked
    example — see **FR-ACC-01 Open account** and **FR-ACC-02 View account** in
    docs/02. The ID matters: e2e tests reference it — that closes the
    requirement → test traceability loop. (Slice 2 continues the numbering:
@@ -241,7 +252,7 @@ past ~5 lines it's trying to be a design doc; the design belongs in 04/05/06.
 acceptance criteria first lived implicitly in this tutorial's checkpoints:
 "201 + Location", "400 on missing fields", "409 on unknown owner". Compare
 FR-ACC-01 in docs/02 against Checkpoint 4 and you'll see they're the same
-facts in two forms. For slice 2, write FR-ACC-03 *first* and derive your
+facts in two forms. For slice 2, write FR-ACC-03 _first_ and derive your
 checkpoints from it — that's the docs-first direction.)
 
 ---
@@ -270,13 +281,13 @@ PostgreSQL  (schema created by Flyway migrations, never by Hibernate)
 
 Files you will create, in build order:
 
-| Stage | Layer | Files |
-|---|---|---|
-| 1 | build/config | `pom.xml` (edit), `application.properties`, 3 SQL migrations |
-| 2 | domain | `Money`, `Account`, `AccountType`, `AccountStatus`, `AccountNumber`, `AccountRepository`, `AccountOpened` + `AccountTest` |
-| 3 | application + infrastructure | `OpenAccountCommand/Handler/Result`, `AccountView`, `GetAccountHandler`, `DomainEventPublisher` port, `AccountJpaRepository`, `AccountRepositoryAdapter`, `SpringDomainEventPublisher` |
-| 4 | api | `OpenAccountRequest`, `AccountResponse`, `AccountController`, `GlobalExceptionHandler` |
-| 5 | tests | `TestcontainersConfiguration`, `OpenAccountE2ETest`, update `BankAppApplicationTests` |
+| Stage | Layer                        | Files                                                                                                                                                                                  |
+| ----- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | build/config                 | `pom.xml` (edit), `application.properties`, 3 SQL migrations                                                                                                                           |
+| 2     | domain                       | `Money`, `Account`, `AccountType`, `AccountStatus`, `AccountNumber`, `AccountRepository`, `AccountOpened` + `AccountTest`                                                              |
+| 3     | application + infrastructure | `OpenAccountCommand/Handler/Result`, `AccountView`, `GetAccountHandler`, `DomainEventPublisher` port, `AccountJpaRepository`, `AccountRepositoryAdapter`, `SpringDomainEventPublisher` |
+| 4     | api                          | `OpenAccountRequest`, `AccountResponse`, `AccountController`, `GlobalExceptionHandler`                                                                                                 |
+| 5     | tests                        | `TestcontainersConfiguration`, `OpenAccountE2ETest`, update `BankAppApplicationTests`                                                                                                  |
 
 ---
 
@@ -365,9 +376,10 @@ Inside `<dependencies>`, replace the `spring-boot-starter-web` entry and add the
 ```
 
 **Syntax notes**
+
 - No `<version>` tags: the parent `spring-boot-starter-parent` is a BOM (bill of
   materials) that pins compatible versions for all of these. Only add a version
-  when a dependency is *not* managed by the BOM.
+  when a dependency is _not_ managed by the BOM.
 - `<scope>runtime</scope>`: your code never imports the Postgres driver directly
   (you program against JDBC interfaces), so it's not needed at compile time.
 - `<scope>test</scope>`: not packaged into the production jar.
@@ -390,19 +402,20 @@ spring.jpa.open-in-view=false
 ```
 
 **Syntax notes**
+
 - `${POSTGRES_PORT:5432}` = "use env var `POSTGRES_PORT`, default to `5432`".
   Dev defaults in properties are fine; production supplies real env vars.
 - **Where does my `.env` password go? Nowhere in this file.** Spring Boot does
-  NOT read `.env` — that file is read by *docker compose*, which sets the
+  NOT read `.env` — that file is read by _docker compose_, which sets the
   container's password on first initialization of the volume. Spring reads the
-  *shell environment*. The two sides must simply agree:
+  _shell environment_. The two sides must simply agree:
   - If your `.env` keeps the example password, the fallback default here
     already matches — done.
   - If you changed it, load `.env` into your shell before starting the app:
     `set -a; source ../../../.env; set +a; ./mvnw spring-boot:run`
   - Never put a real password after the `:` in this file — it's committed to
     git. Only the throwaway fallback lives here; real values arrive via env.
-  - Changed `.env` *after* Postgres first ran? The old password is baked into
+  - Changed `.env` _after_ Postgres first ran? The old password is baked into
     the volume — `docker compose down -v && docker compose up -d` resets it.
 - `ddl-auto=validate` is the professional setting. `update`/`create` let Hibernate
   mutate your schema — never acceptable for a bank. If entity and table disagree,
@@ -455,18 +468,19 @@ values ('11111111-1111-1111-1111-111111111111', 'dev@bankapp.local', 'Dev User')
 ```
 
 **Why these columns**
+
 - `numeric(19,4)` for money — **never** `float`/`double` (binary floats can't
   represent 0.10 exactly; auditors will find the missing cents).
 - `version bigint` — optimistic locking (Stage 2). Two concurrent updates to the
   same account: the second one fails instead of silently overwriting. Mandatory
   thinking for a bank from day one.
 - `type`/`status` as `varchar` — matches `@Enumerated(EnumType.STRING)`. Storing
-  enum *names* survives reordering the Java enum; storing ordinals doesn't.
+  enum _names_ survives reordering the Java enum; storing ordinals doesn't.
 - `balance_currency varchar(3)`, **not `char(3)`** — two reasons. Postgres
   `char(n)` blank-pads shorter values (`"US"` silently becomes `"US "`), and
   Hibernate maps a Java `String` to `VARCHAR`, so a `char(3)` column fails
-  `ddl-auto=validate` with *"found [bpchar (Types#CHAR)], but expecting
-  [varchar]"*. Length is guarded where it belongs: the `Money` constructor
+  `ddl-auto=validate` with _"found [bpchar (Types#CHAR)], but expecting
+  [varchar]"_. Length is guarded where it belongs: the `Money` constructor
   (stage 2a) rejects anything that isn't 3 characters. `length = 3` on the
   `@Column` documents the limit and caps DDL if it's ever generated.
 - The FK `references users (id)` makes the DB itself reject accounts for
@@ -492,8 +506,8 @@ Expected: `accounts`, `users`, `flyway_schema_history`. Stop the app (Ctrl-C).
 
 ## Stage 2 — Domain: where the business rules live
 
-No Spring in this stage. Only JPA *mapping annotations* are allowed on the
-aggregate (our ADR-002 tradeoff) — no framework *behavior*.
+No Spring in this stage. Only JPA _mapping annotations_ are allowed on the
+aggregate (our ADR-002 tradeoff) — no framework _behavior_.
 
 ### 2a. `com/bankapp/shared/domain/Money.java` (shared kernel — every slice needs it)
 
@@ -507,6 +521,9 @@ import java.math.BigDecimal;
 @Embeddable
 public record Money(BigDecimal amount, String currencyCode) {
 
+    /** Storage scale — matches the numeric(19,4) columns money is persisted in. */
+    private static final int SCALE = 4;
+
     public Money {
         if (amount == null) {
             throw new IllegalArgumentException("amount is required");
@@ -514,9 +531,11 @@ public record Money(BigDecimal amount, String currencyCode) {
         if (currencyCode == null || currencyCode.length() != 3) {
             throw new IllegalArgumentException("currencyCode must be a 3-letter ISO code");
         }
-        if (amount.scale() > 4) {
+        if (amount.scale() > SCALE) {
             throw new IllegalArgumentException("amount supports at most 4 decimal places");
         }
+        // Normalize scale so equal amounts are equal objects (see note below).
+        amount = amount.setScale(SCALE);
     }
 
     public static Money zero(String currencyCode) {
@@ -547,9 +566,10 @@ public record Money(BigDecimal amount, String currencyCode) {
 ```
 
 **Syntax notes**
+
 - `record` = immutable class: final fields, constructor, accessors (`amount()`,
-  not `getAmount()`), `equals`/`hashCode` by value — exactly what a DDD *value
-  object* needs. Two `Money(10, "USD")` are equal; two `Account`s never are
+  not `getAmount()`), `equals`/`hashCode` by value — exactly what a DDD _value
+  object_ needs. Two `Money(10, "USD")` are equal; two `Account`s never are
   (entities have identity, value objects have only values).
 - `public Money { ... }` is a **compact constructor** — validation runs on every
   construction. An invalid `Money` cannot exist. That's the whole trick of DDD
@@ -557,6 +577,16 @@ public record Money(BigDecimal amount, String currencyCode) {
 - `@Embeddable`: JPA will inline these fields into the owning entity's table
   (no separate `money` table). Hibernate 7 (in Boot 4) supports records here.
 - Operations return **new** instances (`add`, `subtract`) — immutability again.
+- **`amount = amount.setScale(SCALE)` — reassigning the parameter inside a
+  compact constructor is legal and idiomatic**: the field assignment happens
+  _after_ the compact body runs, so this normalizes what gets stored. It is
+  not cosmetic. `BigDecimal.equals()` compares **scale as well as value**, so
+  without it `new BigDecimal("0")` and `new BigDecimal("0.0000")` produce two
+  `Money` objects that are _not equal_ — the record's generated `equals()`
+  inherits that. A value object whose equal values aren't equal is broken by
+  definition, and it fails in practice the moment you compare an in-memory
+  amount with one round-tripped through `numeric(19,4)` (which always returns
+  scale 4) — exactly what the stage-5 e2e test does.
 
 ### 2b. `com/bankapp/accounts/domain/AccountType.java` and `AccountStatus.java`
 
@@ -718,6 +748,7 @@ public class Account {
 ```
 
 **Syntax notes**
+
 - `@Entity` + `@Table(name = "accounts")`: Hibernate maps this class to the
   `accounts` table Flyway created. At startup, `ddl-auto=validate` cross-checks
   every `@Column` against the real table — your first checkpoint for this stage.
@@ -736,7 +767,7 @@ public class Account {
   `deposit(...)`) — that's ubiquitous language. The private constructor + static
   factory `open(...)` means every `Account` in existence went through the rules.
 - Why `protected Account()`: Hibernate instantiates entities reflectively and
-  then sets fields; it needs a no-arg constructor but *your* code shouldn't call it.
+  then sets fields; it needs a no-arg constructor but _your_ code shouldn't call it.
 
 ### 2e. `com/bankapp/accounts/domain/AccountRepository.java` — the port
 
@@ -757,7 +788,7 @@ public interface AccountRepository {
 ```
 
 The interface lives in **domain**, the implementation in **infrastructure**
-(Stage 3). The domain declares what persistence it *needs*; it doesn't know
+(Stage 3). The domain declares what persistence it _needs_; it doesn't know
 Postgres exists. This is the Repository pattern + Dependency Inversion (the D
 in SOLID) in one file.
 
@@ -773,7 +804,7 @@ public record AccountOpened(UUID accountId, UUID ownerId, Instant occurredAt) {
 }
 ```
 
-A domain event is a *fact*, named in past tense. Nothing consumes it yet — the
+A domain event is a _fact_, named in past tense. Nothing consumes it yet — the
 notifications slice will subscribe later without the accounts slice changing.
 
 ### 2g. First test — `src/test/java/com/bankapp/accounts/domain/AccountTest.java`
@@ -819,6 +850,7 @@ class AccountTest {
 ```
 
 **Syntax notes**
+
 - No Spring annotations, no `@SpringBootTest` — this runs in milliseconds. Most
   of your tests should look like this; it's the payoff for keeping rules in the
   domain.
@@ -948,6 +980,7 @@ public class OpenAccountHandler {
 ```
 
 **Syntax notes**
+
 - `@Service` registers the class as a Spring bean (component scan finds it
   because it's under `com.bankapp`, the package of `BankAppApplication`).
 - **Constructor injection with no `@Autowired`**: one constructor → Spring uses
@@ -956,7 +989,7 @@ public class OpenAccountHandler {
 - Both dependencies are **interfaces you defined** (ports). The handler compiles
   without Spring Data, Postgres, or any event machinery — that's what makes it
   trivially unit-testable with Mockito later.
-- `@Transactional` (the *Spring* one — `org.springframework.transaction.annotation`,
+- `@Transactional` (the _Spring_ one — `org.springframework.transaction.annotation`,
   not `jakarta.transaction`): the whole method is one DB transaction. Exception →
   rollback, including the save. The transaction boundary belongs on the use case,
   not on the controller (too wide) or the repository (too narrow).
@@ -1093,6 +1126,7 @@ class AccountRepositoryAdapter implements AccountRepository {
 ```
 
 **Syntax notes**
+
 - `extends JpaRepository<Account, UUID>` — Spring Data generates the
   implementation at runtime: `save`, `findById`, paging, everything.
 - `existsByAccountNumber` is a **derived query**: Spring Data parses the method
@@ -1266,6 +1300,7 @@ public class AccountController {
 ```
 
 **Syntax notes**
+
 - `@RestController` = `@Controller` + every return value serialized to JSON.
 - `@Valid @RequestBody`: Jackson deserializes JSON → record, then Bean
   Validation runs the `@NotNull` rules. Failure → `MethodArgumentNotValidException`
@@ -1330,6 +1365,7 @@ public class GlobalExceptionHandler {
 ```
 
 **Syntax notes**
+
 - `@RestControllerAdvice` = applies to **every** controller. Error handling is
   cross-cutting → lives in `shared/web/`, not in a slice.
 - `ProblemDetail` is Spring's built-in RFC 9457 "problem+json" — the standard
@@ -1411,6 +1447,7 @@ public class TestcontainersConfiguration {
 ```
 
 **Syntax notes**
+
 - `@ServiceConnection` is the magic: Boot inspects the container bean and
   **overrides `spring.datasource.*` automatically** — no URL/username/password
   wiring, no `@DynamicPropertySource` boilerplate from older tutorials.
@@ -1533,6 +1570,7 @@ class OpenAccountE2ETest {
 ```
 
 **Syntax notes**
+
 - `webEnvironment = RANDOM_PORT` boots real Tomcat on a free port — this is a
   genuine HTTP round-trip, JSON serialization and all, not a mock.
 - Passing a `Map` as body → Jackson serializes it to JSON. (If your IDE doesn't
@@ -1558,7 +1596,7 @@ because tests bring their own Postgres. Then `docker compose start postgres`.
 ## Stage 6 (optional but recommended) — ArchUnit: the architecture as a test
 
 ADR-002 keeps JPA annotations on the aggregate and promises in exchange that
-the *real* rule — no framework behavior in domain, no cross-slice coupling —
+the _real_ rule — no framework behavior in domain, no cross-slice coupling —
 is enforced mechanically. This stage delivers that promise: the layer rules
 from docs/08 become a failing build instead of a code-review hope.
 
@@ -1618,6 +1656,7 @@ class ArchitectureTest {
 ```
 
 **Syntax notes**
+
 - ArchUnit reads compiled **bytecode** — no Spring context, no database; these
   run as fast as `AccountTest`.
 - `@ArchTest` fields replace `@Test` methods; snake_case names are the ArchUnit
@@ -1657,16 +1696,17 @@ every build.
 
 ## Troubleshooting
 
-| Symptom | Likely cause |
-|---|---|
-| `FlywayValidateException: Migration checksum mismatch` | You edited an already-applied migration. Never do that — for a **dev** DB, `docker compose down -v && docker compose up -d` resets; from then on, add new `V<n>` files instead. |
-| `Schema-validation: missing column` at startup | `@Column(name=...)` ↔ SQL column mismatch. The error names the column; fix whichever side is wrong (new migration if the SQL is wrong). |
-| `Schema validation: wrong column type ... found [bpchar (Types#CHAR)], but expecting [varchar]` | SQL column is `char(n)` but Hibernate maps Java `String` → `VARCHAR`. Use `varchar(n)` in the migration. **`columnDefinition` does not help** — it only affects DDL *generation*, never `validate`, so it changes the error text without fixing anything. |
-| `Connection refused` on startup | Postgres container not running (`docker compose ps`), or wrong port in `.env`. |
-| `password authentication failed` | `.env` changed after the volume was created → `docker compose down -v`. |
-| 400 on every POST | Missing `Content-Type: application/json` header in curl. |
-| E2E tests: `Could not find a valid Docker environment` | Docker Desktop isn't running. |
-| `No ConnectionDetailsFactory found for @ServiceConnection` | Wrong Testcontainers artifact — Boot 4 needs 2.x: `testcontainers-postgresql`, not 1.x `postgresql`. |
+| Symptom                                                                                         | Likely cause                                                                                                                                                                                                                                                                                            |
+| ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FlywayValidateException: Migration checksum mismatch`                                          | You edited an already-applied migration. Never do that — for a **dev** DB, `docker compose down -v && docker compose up -d` resets; from then on, add new `V<n>` files instead.                                                                                                                         |
+| `Schema-validation: missing column` at startup                                                  | `@Column(name=...)` ↔ SQL column mismatch. The error names the column; fix whichever side is wrong (new migration if the SQL is wrong).                                                                                                                                                                 |
+| `Schema validation: wrong column type ... found [bpchar (Types#CHAR)], but expecting [varchar]` | SQL column is `char(n)` but Hibernate maps Java `String` → `VARCHAR`. Use `varchar(n)` in the migration. **`columnDefinition` does not help** — it only affects DDL _generation_, never `validate`, so it changes the error text without fixing anything.                                               |
+| `Connection refused` on startup                                                                 | Postgres container not running (`docker compose ps`), or wrong port in `.env`.                                                                                                                                                                                                                          |
+| `password authentication failed`                                                                | `.env` changed after the volume was created → `docker compose down -v`.                                                                                                                                                                                                                                 |
+| 400 on every POST                                                                               | Missing `Content-Type: application/json` header in curl.                                                                                                                                                                                                                                                |
+| E2E tests: `Could not find a valid Docker environment`                                          | Docker Desktop isn't running.                                                                                                                                                                                                                                                                           |
+| E2E: `expected:<...balance=0...> but was:<...balance=0.0000...>`                                | `BigDecimal.equals` compares scale, and records inherit that in their generated `equals`. The in-memory value (scale 0) and the DB round-trip (`numeric(19,4)` → scale 4) are the same amount but unequal objects. Fixed in the domain, not the test: `Money` normalizes with `setScale(4)` (stage 2a). |
+| `No ConnectionDetailsFactory found for @ServiceConnection`                                      | Wrong Testcontainers artifact — Boot 4 needs 2.x: `testcontainers-postgresql`, not 1.x `postgresql`.                                                                                                                                                                                                    |
 
 ---
 
@@ -1675,7 +1715,7 @@ every build.
 Everything you need already exists as a pattern above. Files to create:
 
 1. `accounts/domain/Account.java` — add a `freeze()` method. Rules to enforce
-   *inside the aggregate*: only an `ACTIVE` account can be frozen; freezing a
+   _inside the aggregate_: only an `ACTIVE` account can be frozen; freezing a
    `CLOSED` account is an `IllegalStateException` (→ your advice already maps it
    to 409). Add `AccountFrozen` to `domain/event/`.
 2. `accounts/application/freezeaccount/FreezeAccountCommand.java` — record with
@@ -1685,10 +1725,10 @@ Everything you need already exists as a pattern above. Files to create:
    event. `@Transactional`. Notice how thin it is.
 4. `accounts/api/AccountController.java` — add
    `@PostMapping("/{id}/freeze")` → 200 with the updated account (or 404).
-   A state *transition* is a POST to a sub-resource, not a PUT of the whole thing.
+   A state _transition_ is a POST to a sub-resource, not a PUT of the whole thing.
 5. Tests: two plain-JUnit cases in `AccountTest` (freeze works on ACTIVE; freeze
    on CLOSED throws) and one e2e case (`POST /{id}/freeze` → 200 → GET shows
-   `FROZEN`; freeze again → still fine or 409? — *you decide and document it*:
+   `FROZEN`; freeze again → still fine or 409? — _you decide and document it_:
    idempotency is a real API design decision, see docs/00 goals).
 6. No migration needed — ask yourself why. (Answer: the `status` column and its
    `FROZEN` value already exist; only behavior changes.)
