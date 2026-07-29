@@ -71,17 +71,65 @@ Per slice:
    acceptance criteria: the story above became **FR-ACC-01** in docs/02, then
    docs/04 (Account invariants), docs/05 (the two endpoint rows), docs/06
    (AccountOpened).
-4. **Branch per story** — the issue page's "Create a branch" button, or
-   `git switch -c feat/accounts-open-account`. Commits reference the issue:
-   `feat(accounts): add Account aggregate and Money value object (#1)`.
-5. **PR with `Closes #1`, even solo.** Self-review the diff in the PR view,
-   let CI run (once it exists), merge — issue auto-closes, milestone ticks.
-   A history of tidy PRs with linked issues is a strong hiring signal.
+4. **Branch per story.** Full command cycle (uncommitted work is safe: it
+   travels onto the new branch with you):
+
+   ```bash
+   git switch -c feat/accounts-open-account   # create + switch in one step
+   ```
+
+   **Commit at green checkpoints** — every commit should be a state you'd
+   happily check out later: it compiles, its tests pass. Run the stage's
+   checkpoint first, then:
+
+   ```bash
+   git add packages/backend/bank-app
+   git status                                  # always read what's staged
+   git commit -m "feat(accounts): add Money VO, Account aggregate, domain tests (#1)"
+   ```
+
+   `(#1)` = issue number → GitHub links commit ↔ issue automatically.
+   First push creates the remote branch and ties them together (`-u` = set
+   upstream; after this, plain `git push` suffices):
+
+   ```bash
+   git push -u origin feat/accounts-open-account
+   ```
+
+5. **Draft PR immediately, mark Ready at the end — even solo.** "Draft" is a
+   PR state, not a commit type: visible, CI runs on it (once it exists), but
+   unmergeable until you flip it to Ready.
+
+   ```bash
+   gh pr create --draft --title "Customer can open a bank account" --body "Closes #1"
+   ```
+
+   Then per stage: checkpoint green → commit → `git push` (the PR updates
+   itself). When the final checkpoint passes:
+
+   ```bash
+   gh pr ready        # draft → ready for review
+   ```
+
+   Self-review the full diff in the PR view (you *will* find something), then:
+
+   ```bash
+   gh pr merge --squash --delete-branch
+   ```
+
+   `--squash` collapses the stage commits into one story-sized commit on main
+   (use plain `gh pr merge` to keep every checkpoint commit instead — taste,
+   but pick one style and stay consistent). Merge auto-closes the issue and
+   ticks the milestone. Then sync up:
+
+   ```bash
+   git switch main && git pull
+   ```
+
    *(Slice 1 backfill reality: the early stages were committed straight to
-   main before this workflow existed — that history stays as it is. Either
-   branch from the current stage onward and PR the rest, or simply tick and
-   close the issues manually at the final checkpoint; slice 2 runs the full
-   branch → PR cycle from the start.)*
+   main before this workflow existed — that history stays as it is. Branch
+   from the current stage onward and PR the rest; slice 2 runs the full
+   cycle from the start.)*
 6. **Close the milestone when the slice ships** — for slice 1 that's after
    Checkpoint 5 (or 6 with ArchUnit) is green. Anything discovered mid-slice
    but out of scope (e.g. "AccountNumber should be a real VO",
