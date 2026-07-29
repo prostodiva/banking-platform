@@ -5,7 +5,7 @@ create table accounts (
     type             varchar(20)   not null,
     status           varchar(20)   not null,
     balance_amount   numeric(19,4) not null,
-    balance_currency char(3)       not null,
+    balance_currency varchar(3)    not null,
     version          bigint        not null,
     created_at       timestamptz   not null
 );
