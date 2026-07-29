@@ -67,6 +67,44 @@ Per slice:
    The acceptance criteria are the same facts as the FR entry and the
    checkpoints — the story is where they get *invented*; docs/02 is where
    they become the contract; the test is where they become proof.
+
+   Slice 1's second story (small ones don't need every section verbose):
+
+   > **Title:** Customer can view an account
+   > **Labels:** `story`, `slice:accounts` · **Milestone:** Slice 1
+   >
+   > ```markdown
+   > ## Story
+   > As a customer, I want to view an account's details
+   > so that I can check its status and balance.
+   >
+   > ## Acceptance criteria
+   > - [ ] GET /api/accounts/{id} → 200 with account details
+   > - [ ] Unknown account id → 404
+   >
+   > ## Traceability
+   > FR-ACC-02 (docs/02) · to be covered by OpenAccountE2ETest
+   >
+   > ## Tasks
+   > - [ ] GetAccountHandler + AccountView
+   > - [ ] GET endpoint on AccountController
+   > - [ ] E2E test: happy path + 404
+   > ```
+
+   **Rule: every story produces exactly one FR** (occasionally a story splits
+   into two if it bundles distinct behaviors — not the case here). The
+   direction only goes one way: the story is written first, in business
+   language; the FR is the same fact translated into the durable, testable
+   contract in step 3. A story doesn't need to match an existing FR — it
+   creates one.
+
+   *(Slice 1 backfill note: both stories above describe code that was
+   already built earlier in this tutorial. When creating these issues for a
+   slice already in progress, tick the acceptance criteria as already-met
+   rather than treating them as pending — the issue is closing a
+   traceability gap, not queuing new work. Once you have the real issue
+   number, update the draft PR body — `Closes #1, Closes #2` — and reference
+   it in the relevant commit, same as `(#1)` below.)*
 3. **Docs-first pass** (next section) — derive the FR entry from your own
    acceptance criteria: the story above became **FR-ACC-01** in docs/02, then
    docs/04 (Account invariants), docs/05 (the two endpoint rows), docs/06
@@ -95,6 +133,36 @@ Per slice:
    ```bash
    git push -u origin feat/accounts-open-account
    ```
+
+   **Keeping a reference doc (like this file) current on `main` mid-slice.**
+   Doc-only edits made while you're mid-branch (e.g. improving this very
+   walkthrough) don't have to wait for the story's PR to merge — that's
+   exactly *why* code and docs get committed separately (above): a docs-only
+   commit touches no files the code commits touch, so it can be cherry-picked
+   onto `main` immediately with zero conflict risk, independent of how far
+   along the code is.
+
+   ```bash
+   git log --oneline -3                # find the docs commit's hash
+   ```
+
+   ```bash
+   git switch main
+   git pull
+   git cherry-pick <docs-commit-hash>  # replays just that one commit onto main
+   git push
+   git switch feat/accounts-open-account   # back to where you left off
+   ```
+
+   Why it's safe: cherry-pick reapplies *only* that commit's diff — nothing
+   else from the branch comes along. When the feature branch's PR eventually
+   merges, `main` already has that exact content, so git treats it as a
+   no-op for that file — no conflict, even though the same logical change
+   now exists as two different commit SHAs (one on each branch). That's
+   harmless; it's just slightly duplicated history if you go looking. If
+   that bothers you across many stages, the alternative is to stop
+   committing doc-only edits to the feature branch at all and make them
+   directly on `main` in their own small sessions instead.
 
 5. **Draft PR immediately, mark Ready at the end — even solo.** "Draft" is a
    PR state, not a commit type: visible, CI runs on it (once it exists), but
