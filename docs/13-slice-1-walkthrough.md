@@ -438,7 +438,7 @@ create table accounts (
     type             varchar(20)   not null,
     status           varchar(20)   not null,
     balance_amount   numeric(19,4) not null,
-    balance_currency char(3)       not null,
+    balance_currency varchar(3)    not null,
     version          bigint        not null,
     created_at       timestamptz   not null
 );
@@ -462,6 +462,13 @@ values ('11111111-1111-1111-1111-111111111111', 'dev@bankapp.local', 'Dev User')
   thinking for a bank from day one.
 - `type`/`status` as `varchar` — matches `@Enumerated(EnumType.STRING)`. Storing
   enum *names* survives reordering the Java enum; storing ordinals doesn't.
+- `balance_currency varchar(3)`, **not `char(3)`** — two reasons. Postgres
+  `char(n)` blank-pads shorter values (`"US"` silently becomes `"US "`), and
+  Hibernate maps a Java `String` to `VARCHAR`, so a `char(3)` column fails
+  `ddl-auto=validate` with *"found [bpchar (Types#CHAR)], but expecting
+  [varchar]"*. Length is guarded where it belongs: the `Money` constructor
+  (stage 2a) rejects anything that isn't 3 characters. `length = 3` on the
+  `@Column` documents the limit and caps DDL if it's ever generated.
 - The FK `references users (id)` makes the DB itself reject accounts for
   nonexistent owners — defense in depth below the application layer.
 
@@ -1654,6 +1661,7 @@ every build.
 |---|---|
 | `FlywayValidateException: Migration checksum mismatch` | You edited an already-applied migration. Never do that — for a **dev** DB, `docker compose down -v && docker compose up -d` resets; from then on, add new `V<n>` files instead. |
 | `Schema-validation: missing column` at startup | `@Column(name=...)` ↔ SQL column mismatch. The error names the column; fix whichever side is wrong (new migration if the SQL is wrong). |
+| `Schema validation: wrong column type ... found [bpchar (Types#CHAR)], but expecting [varchar]` | SQL column is `char(n)` but Hibernate maps Java `String` → `VARCHAR`. Use `varchar(n)` in the migration. **`columnDefinition` does not help** — it only affects DDL *generation*, never `validate`, so it changes the error text without fixing anything. |
 | `Connection refused` on startup | Postgres container not running (`docker compose ps`), or wrong port in `.env`. |
 | `password authentication failed` | `.env` changed after the volume was created → `docker compose down -v`. |
 | 400 on every POST | Missing `Content-Type: application/json` header in curl. |
