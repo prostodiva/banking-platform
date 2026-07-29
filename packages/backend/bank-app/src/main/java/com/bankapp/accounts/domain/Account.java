@@ -46,7 +46,7 @@ public class Account {
     )
     @AttributeOverride(
         name = "currencyCode",
-        column = @Column(name = "balance_currency", nullable = false)
+        column = @Column(name = "balance_currency", nullable = false, length = 3)
     )
     private Money balance;
 
