@@ -1694,6 +1694,77 @@ every build.
 
 ---
 
+## Stage 7 — Ship the slice (commit → PR → merge → close)
+
+The story-first workflow at the top opened the loop; this closes it. Nothing
+merges until the suite is green:
+
+```bash
+./mvnw test
+```
+
+**Commit code and docs separately** (that's what makes doc-only commits
+cherry-pickable to `main` mid-slice — see step 4 at the top):
+
+```bash
+git add packages/backend/bank-app && git commit -m "test(accounts): add Testcontainers e2e and ArchUnit boundary tests
+
+Normalize Money scale so equal amounts are equal objects: BigDecimal.equals
+compares scale, and a numeric(19,4) round-trip returns scale 4.
+
+Closes #1
+Closes #2"
+```
+
+```bash
+git add docs && git commit -m "docs: fix varchar(3) column, Money scale normalization, troubleshooting rows"
+```
+
+```bash
+git push
+```
+
+**Open the PR.** Each issue needs its own keyword — `Closes #1, #2` silently
+closes only #1:
+
+```bash
+gh pr create --title "Slice 1: open and view accounts" --body "Slice 1 — Open Account, end to end: domain, application, api, Postgres, Testcontainers e2e, ArchUnit boundary tests.
+
+Closes #1
+Closes #2"
+```
+
+`gh` infers head (current branch) and base (`main`), then prints the PR URL.
+
+**Put the closing keywords in the PR body, not just commit messages.** With
+`--squash`, GitHub builds the merge commit from the PR title and body — the
+body is what reliably closes issues under any merge strategy.
+
+**Self-review before merging.** Open the PR's *Files changed* tab and read the
+whole slice as one diff — days of work seen at once. You *will* find leftover
+debris (stray comments, indentation drift) that was invisible while writing.
+This is the step solo developers skip and shouldn't; it's also the artifact a
+hiring reviewer actually reads.
+
+```bash
+gh pr merge --squash --delete-branch
+```
+
+```bash
+git switch main && git pull
+```
+
+Both issues auto-close, the milestone hits 2/2 — close the milestone. Anything
+you parked mid-slice stays as its own labeled issue for later.
+
+**For slice 2, open the PR early as a draft instead** (`gh pr create --draft`,
+before writing the first line of FreezeAccount), pushing into it as each stage
+goes green. Draft PRs earn their keep by making work visible in progress and
+running CI continuously — here the work was already finished, so a draft would
+have existed for ninety seconds.
+
+---
+
 ## Troubleshooting
 
 | Symptom                                                                                         | Likely cause                                                                                                                                                                                                                                                                                            |
