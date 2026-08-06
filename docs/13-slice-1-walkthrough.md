@@ -1740,8 +1740,8 @@ Closes #2"
 `--squash`, GitHub builds the merge commit from the PR title and body — the
 body is what reliably closes issues under any merge strategy.
 
-**Self-review before merging.** Open the PR's *Files changed* tab and read the
-whole slice as one diff — days of work seen at once. You *will* find leftover
+**Self-review before merging.** Open the PR's _Files changed_ tab and read the
+whole slice as one diff — days of work seen at once. You _will_ find leftover
 debris (stray comments, indentation drift) that was invisible while writing.
 This is the step solo developers skip and shouldn't; it's also the artifact a
 hiring reviewer actually reads.

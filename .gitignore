@@ -69,3 +69,17 @@ logs/
 
 # ===== Test / build reports =====
 *.hprof
+
+# ===== Personal study material (not part of the project docs) =====
+docs/14-slice-1-quiz.md
+docs/14-slice-1-quiz-answers.md
+docs/15-study-cards.md
+docs/15-study-cards.tsv
+quiz-my-answers.md
+docs/16-code-quiz.md
+docs/16-code-quiz-answers.md
+docs/17-code-cards.md
+docs/17-code-cards.tsv
+docs/18-interview-cards.md
+docs/18-interview-cards.tsv
+docs/cards-to-anki.py

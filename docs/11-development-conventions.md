@@ -45,7 +45,7 @@ Worked example with full explanations: [docs/13-slice-1-walkthrough.md](13-slice
 ## Layer rules (enforced by ArchitectureTest — docs/13 stage 6)
 
 - `api → application → domain ← infrastructure`; nothing imports `api`.
-- Domain: JPA mapping annotations allowed, no framework *behavior*
+- Domain: JPA mapping annotations allowed, no framework _behavior_
   (no Spring imports, no Spring Data types) — see ADR-002.
 - Cross-slice: reference other contexts **by id only**; communicate via events
   or application-service interfaces.
@@ -54,6 +54,5 @@ Worked example with full explanations: [docs/13-slice-1-walkthrough.md](13-slice
 ## Testing conventions
 
 - Business rules: plain JUnit + AssertJ, no Spring context.
-- End-to-end: `@SpringBootTest(RANDOM_PORT)` + `@Import(TestcontainersConfiguration.class)`
-  + `@AutoConfigureRestTestClient` + `RestTestClient`. Real Postgres, never H2.
+- End-to-end: `@SpringBootTest(RANDOM_PORT)` + `@Import(TestcontainersConfiguration.class) + `@AutoConfigureRestTestClient`+`RestTestClient`. Real Postgres, never H2.
 - `BigDecimal` assertions: `isEqualByComparingTo`, never `isEqualTo`.
