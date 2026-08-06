@@ -29,7 +29,7 @@ public class OpenAccountHandler {
         Account account = Account.open(
             command.ownerId(),
             command.type(),
-            command.currentCode(),
+            command.currencyCode(),
             accountNumber
         );
 

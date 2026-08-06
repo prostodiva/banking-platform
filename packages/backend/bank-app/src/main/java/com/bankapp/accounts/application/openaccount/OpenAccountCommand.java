@@ -6,5 +6,5 @@ import java.util.UUID;
 public record OpenAccountCommand(
     UUID ownerId,
     AccountType type,
-    String currentCode
+    String currencyCode
 ) {}

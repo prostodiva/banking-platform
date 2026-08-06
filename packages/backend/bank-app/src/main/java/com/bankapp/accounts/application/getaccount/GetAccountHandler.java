@@ -15,7 +15,7 @@ public class GetAccountHandler {
         this.accounts = accounts;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Optional<AccountView> handle(UUID accountId) {
         return accounts.findById(accountId).map(AccountView::from);
     }

@@ -2,6 +2,8 @@ package com.bankapp.shared.domain;
 
 import jakarta.persistence.Embeddable;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Locale;
 
 @Embeddable
 public record Money(BigDecimal amount, String currencyCode) {
@@ -25,7 +27,8 @@ public record Money(BigDecimal amount, String currencyCode) {
         // Normalize scale so equal amounts are equal objects: BigDecimal.equals
         // compares scale, so without this 0 != 0.0000 and Money would break the
         // core value-object contract (and every DB round-trip comparison).
-        amount = amount.setScale(SCALE);
+        amount = amount.setScale(SCALE, RoundingMode.HALF_EVEN);
+        currencyCode = currencyCode.toUpperCase(Locale.ROOT);
     }
 
     public static Money zero(String currencyCode) {
