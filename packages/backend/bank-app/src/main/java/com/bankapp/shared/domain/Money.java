@@ -3,6 +3,7 @@ package com.bankapp.shared.domain;
 import jakarta.persistence.Embeddable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Currency;
 import java.util.Locale;
 
 @Embeddable
@@ -29,6 +30,14 @@ public record Money(BigDecimal amount, String currencyCode) {
         // core value-object contract (and every DB round-trip comparison).
         amount = amount.setScale(SCALE, RoundingMode.HALF_EVEN);
         currencyCode = currencyCode.toUpperCase(Locale.ROOT);
+        try {
+            Currency.getInstance(currencyCode);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(
+                "currencyCode must be a valid ISO 4217 code: " + currencyCode,
+                e
+            );
+        }
     }
 
     public static Money zero(String currencyCode) {
