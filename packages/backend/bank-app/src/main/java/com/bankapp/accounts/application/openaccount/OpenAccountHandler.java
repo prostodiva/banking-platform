@@ -5,7 +5,6 @@ import com.bankapp.accounts.domain.Account;
 import com.bankapp.accounts.domain.AccountNumber;
 import com.bankapp.accounts.domain.AccountRepository;
 import com.bankapp.accounts.domain.event.AccountOpened;
-import java.time.Instant;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +24,7 @@ public class OpenAccountHandler {
 
     @Transactional
     public OpenAccountResult handle(OpenAccountCommand command) {
-        String accountNumber = uniqueAccountNumber();
+        AccountNumber accountNumber = uniqueAccountNumber();
         Account account = Account.open(
             command.ownerId(),
             command.type(),
@@ -38,16 +37,16 @@ public class OpenAccountHandler {
             new AccountOpened(
                 account.getId(),
                 account.getOwnerId(),
-                Instant.now()
+                account.getCreatedAt()
             )
         );
 
         return OpenAccountResult.from(account);
     }
 
-    private String uniqueAccountNumber() {
+    private AccountNumber uniqueAccountNumber() {
         for (int attempt = 0; attempt < 5; attempt++) {
-            String candidate = AccountNumber.generate();
+            AccountNumber candidate = AccountNumber.generate();
             if (!accounts.existsByAccountNumber(candidate)) {
                 return candidate;
             }

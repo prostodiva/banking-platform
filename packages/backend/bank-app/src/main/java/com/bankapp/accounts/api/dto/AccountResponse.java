@@ -16,7 +16,7 @@ public record AccountResponse(
     public static AccountResponse from(OpenAccountResult result) {
         return new AccountResponse(
             result.id(),
-            result.accountNumber(),
+            result.accountNumber().value(),
             result.type().name(),
             result.status().name(),
             result.balance(),
@@ -27,7 +27,7 @@ public record AccountResponse(
     public static AccountResponse from(AccountView view) {
         return new AccountResponse(
             view.id(),
-            view.accountNumber(),
+            view.accountNumber().value(),
             view.type().name(),
             view.status().name(),
             view.balance(),

@@ -26,7 +26,7 @@ public class Account {
         unique = true,
         updatable = false
     )
-    private String accountNumber;
+    private AccountNumber accountNumber;
 
     @Column(name = "owner_id", nullable = false, updatable = false)
     private UUID ownerId;
@@ -46,7 +46,11 @@ public class Account {
     )
     @AttributeOverride(
         name = "currencyCode",
-        column = @Column(name = "balance_currency", nullable = false, length = 3)
+        column = @Column(
+            name = "balance_currency",
+            nullable = false,
+            length = 3
+        )
     )
     private Money balance;
 
@@ -64,7 +68,7 @@ public class Account {
         UUID ownerId,
         AccountType type,
         String currencyCode,
-        String accountNumber
+        AccountNumber accountNumber
     ) {
         if (ownerId == null) {
             throw new IllegalArgumentException("ownerId is required");
@@ -72,9 +76,7 @@ public class Account {
         if (type == null) {
             throw new IllegalArgumentException("type is required");
         }
-        if (accountNumber == null || accountNumber.isBlank()) {
-            throw new IllegalArgumentException("accountNumber is required");
-        }
+
         this.id = UUID.randomUUID();
         this.accountNumber = accountNumber;
         this.ownerId = ownerId;
@@ -88,7 +90,7 @@ public class Account {
         UUID ownerId,
         AccountType type,
         String currencyCode,
-        String accountNumber
+        AccountNumber accountNumber
     ) {
         return new Account(ownerId, type, currencyCode, accountNumber);
     }
@@ -97,7 +99,7 @@ public class Account {
         return id;
     }
 
-    public String getAccountNumber() {
+    public AccountNumber getAccountNumber() {
         return accountNumber;
     }
 

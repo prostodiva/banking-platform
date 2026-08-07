@@ -1,6 +1,7 @@
 package com.bankapp.accounts.application.getaccount;
 
 import com.bankapp.accounts.domain.Account;
+import com.bankapp.accounts.domain.AccountNumber;
 import com.bankapp.accounts.domain.AccountStatus;
 import com.bankapp.accounts.domain.AccountType;
 import java.math.BigDecimal;
@@ -9,7 +10,7 @@ import java.util.UUID;
 
 public record AccountView(
     UUID id,
-    String accountNumber,
+    AccountNumber accountNumber,
     UUID ownerId,
     AccountType type,
     AccountStatus status,

@@ -3,6 +3,7 @@ package com.bankapp.accounts.application.openaccount;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.bankapp.accounts.domain.Account;
+import com.bankapp.accounts.domain.AccountNumber;
 import com.bankapp.accounts.domain.AccountRepository;
 import com.bankapp.accounts.domain.AccountStatus;
 import com.bankapp.accounts.domain.AccountType;
@@ -35,7 +36,7 @@ class OpenAccountHandlerTest {
         }
 
         @Override
-        public boolean existsByAccountNumber(String accountNumber) {
+        public boolean existsByAccountNumber(AccountNumber accountNumber) {
             return saved
                 .values()
                 .stream()

@@ -1810,3 +1810,12 @@ zero-balance accounts may close). After those three you have honestly earned the
 
 Quick-reference checklists for future slices live in
 [docs/11-development-conventions.md](11-development-conventions.md).
+
+1. The production fixes — Money (RoundingMode + uppercase), GetAccountHandler (readOnly), OpenAccountCommand, OpenAccountHandler, pom.xml:
+
+git add packages/backend/bank-app/pom.xml packages/backend/bank-app/src/main && git commit -m "fix(accounts): add readOnly to read path, RoundingMode and currency normalization to Money" 2. The tests — the new directory:
+
+git add packages/backend/bank-app/src/test && git commit -m "test(accounts): add OpenAccountHandler unit tests with hand-written fakes (#1)" 3. The docs — diagrams, conventions, walkthrough, gitignore:
+
+git add docs .gitignore && git commit -m "docs: add request-flow diagrams and diagramming guide"
+Then git push (the docs commit is also a candidate for cherry-picking to main, per the step-4 pattern)

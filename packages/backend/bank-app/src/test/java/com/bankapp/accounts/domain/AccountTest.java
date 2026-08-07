@@ -17,7 +17,7 @@ class AccountTest {
             OWNER,
             AccountType.CHECKING,
             "USD",
-            "1233445555"
+            new AccountNumber("1233445555")
         );
 
         assertThat(account.getId()).isNotNull();
@@ -32,14 +32,24 @@ class AccountTest {
     @Test
     void openRequiresAnOwner() {
         assertThatThrownBy(() ->
-            Account.open(null, AccountType.CHECKING, "USD", "1234567890")
+            Account.open(
+                null,
+                AccountType.CHECKING,
+                "USD",
+                new AccountNumber("1234567890")
+            )
         ).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void openRejectsInvalidCurrency() {
         assertThatThrownBy(() ->
-            Account.open(OWNER, AccountType.SAVINGS, "DOLLARS", "1234567890")
+            Account.open(
+                OWNER,
+                AccountType.SAVINGS,
+                "DOLLARS",
+                new AccountNumber("1234567890")
+            )
         ).isInstanceOf(IllegalArgumentException.class);
     }
 }

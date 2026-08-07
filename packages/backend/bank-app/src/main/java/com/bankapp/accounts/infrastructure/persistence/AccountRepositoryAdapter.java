@@ -1,6 +1,7 @@
 package com.bankapp.accounts.infrastructure.persistence;
 
 import com.bankapp.accounts.domain.Account;
+import com.bankapp.accounts.domain.AccountNumber;
 import com.bankapp.accounts.domain.AccountRepository;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,7 +27,7 @@ class AccountRepositoryAdapter implements AccountRepository {
     }
 
     @Override
-    public boolean existsByAccountNumber(String accountNumber) {
+    public boolean existsByAccountNumber(AccountNumber accountNumber) {
         return jpa.existsByAccountNumber(accountNumber);
     }
 }
