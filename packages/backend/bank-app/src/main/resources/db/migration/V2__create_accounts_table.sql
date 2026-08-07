@@ -1,6 +1,6 @@
 create table accounts (
     id               uuid          primary key,
-    account_number   varchar(12)   not null unique,
+    account_number   varchar(10)   not null unique,
     owner_id         uuid          not null references users (id),
     type             varchar(20)   not null,
     status           varchar(20)   not null,
