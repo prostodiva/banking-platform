@@ -30,7 +30,7 @@ class OpenAccountE2ETest {
     void opensAccountAndReadsItBack() {
         AccountResponse created = client
             .post()
-            .uri("/api/accounts")
+            .uri("/api/accounts/")
             .contentType(MediaType.APPLICATION_JSON)
             .body(
                 Map.of(
@@ -70,7 +70,7 @@ class OpenAccountE2ETest {
     void rejectsRequestWithMissingFields() {
         client
             .post()
-            .uri("/api/accounts")
+            .uri("/api/accounts/")
             .contentType(MediaType.APPLICATION_JSON)
             .body(Map.of("type", "CHECKING"))
             .exchange()
@@ -82,7 +82,7 @@ class OpenAccountE2ETest {
     void rejectsUnknownOwner() {
         client
             .post()
-            .uri("/api/accounts")
+            .uri("/api/accounts/")
             .contentType(MediaType.APPLICATION_JSON)
             .body(
                 Map.of(

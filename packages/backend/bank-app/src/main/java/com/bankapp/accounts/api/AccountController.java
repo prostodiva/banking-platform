@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/accounts")
+@RequestMapping("/api/accounts/")
 public class AccountController {
 
     private final OpenAccountHandler openAccount;
@@ -45,7 +45,7 @@ public class AccountController {
         );
 
         return ResponseEntity.created(
-            URI.create("/api/accounts" + result.id())
+            URI.create("/api/accounts/" + result.id())
         ).body(AccountResponse.from(result));
     }
 
