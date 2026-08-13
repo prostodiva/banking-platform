@@ -1,5 +1,6 @@
 package com.bankapp.shared.web;
 
+import com.bankapp.shared.domain.EntityNotFoundException;
 import java.util.stream.Collectors;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -52,6 +53,14 @@ public class GlobalExceptionHandler {
             "The request conflicts with existing data " +
                 "(e.g. unknown owner or duplicate value)."
         );
+        return problem;
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    ProblemDetail onEntityNotFound(EntityNotFoundException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+        problem.setTitle("Not found");
+        problem.setDetail(ex.getMessage());
         return problem;
     }
 }
