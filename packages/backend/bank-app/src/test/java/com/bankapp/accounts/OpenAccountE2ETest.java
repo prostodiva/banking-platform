@@ -28,7 +28,7 @@ class OpenAccountE2ETest {
 
     @Test
     void opensAccountAndReadsItBack() {
-        AccountResponse created = client
+        var result = client
             .post()
             .uri("/api/accounts/")
             .contentType(MediaType.APPLICATION_JSON)
@@ -48,17 +48,20 @@ class OpenAccountE2ETest {
             .expectHeader()
             .exists("Location")
             .expectBody(AccountResponse.class)
-            .returnResult()
-            .getResponseBody();
+            .returnResult();
+
+        AccountResponse created = result.getResponseBody();
+        String location = result.getResponseHeaders().getFirst("Location");
 
         assertThat(created).isNotNull();
         assertThat(created.status()).isEqualTo("ACTIVE");
         assertThat(created.balance()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(created.accountNumber()).hasSize(10);
+        assertThat(location).isEqualTo("/api/accounts/" + created.id());
 
         client
             .get()
-            .uri("/api/accounts/" + created.id())
+            .uri(location)
             .exchange()
             .expectStatus()
             .isOk()
