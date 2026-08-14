@@ -28,7 +28,7 @@ class FreezeAccountE2ETest {
     private AccountResponse openAccount() {
         return client
             .post()
-            .uri("/api/accounts/")
+            .uri("/api/accounts")
             .contentType(MediaType.APPLICATION_JSON)
             .body(
                 Map.of(

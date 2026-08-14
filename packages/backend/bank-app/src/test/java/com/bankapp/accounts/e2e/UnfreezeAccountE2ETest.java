@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.bankapp.TestcontainersConfiguration;
 import com.bankapp.accounts.api.dto.AccountResponse;
-import com.bankapp.accounts.domain.Account;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -29,7 +28,7 @@ class UnfreezeAccountE2ETest {
     private AccountResponse openAccount() {
         return client
             .post()
-            .uri("/api/accounts/")
+            .uri("/api/accounts")
             .contentType(MediaType.APPLICATION_JSON)
             .body(
                 Map.of(
