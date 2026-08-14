@@ -52,4 +52,34 @@ class AccountTest {
             )
         ).isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void freezeMankesActiveAccountFrozen() {
+        Account account = Account.open(
+            OWNER,
+            AccountType.CHECKING,
+            "USD",
+            new AccountNumber("1234567890")
+        );
+
+        account.freeze();
+
+        assertThat(account.getStatus()).isEqualTo(AccountStatus.FROZEN);
+    }
+
+    @Test
+    void freezeRejectsAnAlreadyFrozenAccount() {
+        Account account = Account.open(
+            OWNER,
+            AccountType.CHECKING,
+            "USD",
+            new AccountNumber("1234567890")
+        );
+
+        account.freeze();
+
+        assertThatThrownBy(account::freeze).isInstanceOf(
+            IllegalStateException.class
+        );
+    }
 }

@@ -1,7 +1,7 @@
 # 06 Events
 
 Domain events are **past-tense facts** (`AccountOpened`, not `OpenAccount`),
-defined in the owning slice's `domain/event/` package and published by
+defined in the owning slice's `domain/events/` package and published by
 application handlers through the `DomainEventPublisher` port — never directly
 from controllers or entities.
 

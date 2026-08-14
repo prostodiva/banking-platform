@@ -2,6 +2,9 @@ package com.bankapp.accounts.api;
 
 import com.bankapp.accounts.api.dto.AccountResponse;
 import com.bankapp.accounts.api.dto.OpenAccountRequest;
+import com.bankapp.accounts.application.freezeaccount.FreezeAccountCommand;
+import com.bankapp.accounts.application.freezeaccount.FreezeAccountHandler;
+import com.bankapp.accounts.application.getaccount.AccountView;
 import com.bankapp.accounts.application.getaccount.GetAccountHandler;
 import com.bankapp.accounts.application.openaccount.OpenAccountCommand;
 import com.bankapp.accounts.application.openaccount.OpenAccountHandler;
@@ -23,13 +26,16 @@ public class AccountController {
 
     private final OpenAccountHandler openAccount;
     private final GetAccountHandler getAccount;
+    private final FreezeAccountHandler freezeAccount;
 
     public AccountController(
         OpenAccountHandler openAccount,
-        GetAccountHandler getAccount
+        GetAccountHandler getAccount,
+        FreezeAccountHandler freezeAccount
     ) {
         this.openAccount = openAccount;
         this.getAccount = getAccount;
+        this.freezeAccount = freezeAccount;
     }
 
     @PostMapping
@@ -55,5 +61,12 @@ public class AccountController {
             .handle(id)
             .map(view -> ResponseEntity.ok(AccountResponse.from(view)))
             .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/{id}/freeze")
+    public ResponseEntity<AccountResponse> freeze(@PathVariable UUID id) {
+        AccountView view = freezeAccount.handle(new FreezeAccountCommand(id));
+
+        return ResponseEntity.ok(AccountResponse.from(view));
     }
 }

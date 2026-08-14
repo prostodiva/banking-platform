@@ -95,6 +95,15 @@ public class Account {
         return new Account(ownerId, type, currencyCode, accountNumber);
     }
 
+    public void freeze() {
+        if (status != AccountStatus.ACTIVE) {
+            throw new IllegalStateException(
+                "only ACTIVE accounts can be frozen"
+            );
+        }
+        this.status = AccountStatus.FROZEN;
+    }
+
     public UUID getId() {
         return id;
     }
