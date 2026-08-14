@@ -104,6 +104,16 @@ public class Account {
         this.status = AccountStatus.FROZEN;
     }
 
+    public void unfreeze() {
+        if (status != AccountStatus.FROZEN) {
+            throw new IllegalStateException(
+                "only FROZEN account can be unfrozen"
+            );
+        }
+
+        this.status = AccountStatus.ACTIVE;
+    }
+
     public UUID getId() {
         return id;
     }

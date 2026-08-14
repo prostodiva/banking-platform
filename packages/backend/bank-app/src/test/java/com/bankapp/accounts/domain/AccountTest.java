@@ -53,14 +53,19 @@ class AccountTest {
         ).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test
-    void freezeMankesActiveAccountFrozen() {
-        Account account = Account.open(
+    //helper is used by tests below
+    private Account activeAccount() {
+        return Account.open(
             OWNER,
             AccountType.CHECKING,
             "USD",
             new AccountNumber("1234567890")
         );
+    }
+
+    @Test
+    void freezeMankesActiveAccountFrozen() {
+        Account account = activeAccount();
 
         account.freeze();
 
@@ -69,16 +74,30 @@ class AccountTest {
 
     @Test
     void freezeRejectsAnAlreadyFrozenAccount() {
-        Account account = Account.open(
-            OWNER,
-            AccountType.CHECKING,
-            "USD",
-            new AccountNumber("1234567890")
-        );
+        Account account = activeAccount();
 
         account.freeze();
 
         assertThatThrownBy(account::freeze).isInstanceOf(
+            IllegalStateException.class
+        );
+    }
+
+    @Test
+    void unfreezeMakesFrozenAccountActive() {
+        Account account = activeAccount();
+
+        account.freeze();
+        account.unfreeze();
+
+        assertThat(account.getStatus()).isEqualTo(AccountStatus.ACTIVE);
+    }
+
+    @Test
+    void unfreezeRejectsANonFrozenAccount() {
+        Account account = activeAccount();
+
+        assertThatThrownBy(account::unfreeze).isInstanceOf(
             IllegalStateException.class
         );
     }
