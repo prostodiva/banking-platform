@@ -12,10 +12,13 @@ Conventions, applying to every endpoint:
 
 ## Accounts
 
-| Method | Path | Request body | Success | Errors | FR |
-|---|---|---|---|---|---|
-| POST | `/api/accounts` | `{ownerId: UUID, type: "CHECKING"\|"SAVINGS", currencyCode: ISO-4217}` | 201 + `Location`, AccountResponse | 400 invalid field; 409 unknown owner | FR-ACC-01 |
-| GET | `/api/accounts/{id}` | — | 200, AccountResponse | 404 unknown account | FR-ACC-02 |
+| Method | Path                          | Request body                                                           | Success                           | Errors                                                                   | FR        |
+| ------ | ----------------------------- | ---------------------------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------ | --------- |
+| POST   | `/api/accounts`               | `{ownerId: UUID, type: "CHECKING"\|"SAVINGS", currencyCode: ISO-4217}` | 201 + `Location`, AccountResponse | 400 invalid field; 409 unknown owner                                     | FR-ACC-01 |
+| GET    | `/api/accounts/{id}`          | -                                                                      | 200, AccountResponse              | 404 unknown account                                                      | FR-ACC-02 |
+| POST   | `/api/accounts/{id}/freeze`   | -                                                                      | 200, AccountResponse              | 404 unknown account id; 409 freezing a non-active account                | FR-ACC-03 |
+| POST   | `/api/accounts/{id}/unfreeze` | -                                                                      | 200 AccountResponse               | 404 unknown account id; 409 - unfreezing a non-frozen account            | FR-ACC-04 |
+| POST   | `/api/accounts/{id}/close`    | -                                                                      | 200, AccountResponse              | 404 unknown account id; 409 non-zero balance; 409 account already CLOSED | FR-ACC-05 |
 
 **AccountResponse** (shared by all account endpoints):
 
@@ -29,5 +32,3 @@ Conventions, applying to every endpoint:
   "currencyCode": "USD"
 }
 ```
-
-<!-- Slice 2: POST /api/accounts/{id}/freeze etc. — add rows above, one per endpoint -->

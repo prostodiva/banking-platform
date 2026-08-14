@@ -39,3 +39,4 @@ committed files carry only throwaway dev defaults. Enforced by: `.gitignore`
 
 - Idempotency of payment submission (payments slice — will need an ADR)
 - Rate limiting, caching (Redis), observability/metrics (per docs/00 goals)
+- Authorization
