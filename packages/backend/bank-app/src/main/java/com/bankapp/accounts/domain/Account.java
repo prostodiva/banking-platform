@@ -114,6 +114,20 @@ public class Account {
         this.status = AccountStatus.ACTIVE;
     }
 
+    public void close() {
+        if (status == AccountStatus.CLOSED) {
+            throw new IllegalStateException("closed account cannot be closed");
+        }
+
+        if (!balance.isZero()) {
+            throw new IllegalStateException(
+                "account with a non-zero balance cannot be closed"
+            );
+        }
+
+        this.status = AccountStatus.CLOSED;
+    }
+
     public UUID getId() {
         return id;
     }

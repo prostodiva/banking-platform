@@ -4,9 +4,11 @@ Worked example with full explanations: [docs/13-slice-1-walkthrough.md](13-slice
 
 ## Checklist: adding a use case to an existing slice
 
-1. **Domain first** — add/extend the aggregate method that owns the rules
-   (e.g. `Account.freeze()`); add a domain event to `domain/events/` if other
-   contexts might care. Write the plain-JUnit test for the rules.
+1. **Domain first**
+   - add/extend the aggregate method that owns the rules
+     (e.g. `Account.freeze()`);
+   - add a domain event to `domain/events/` if other
+     contexts might care. Write the plain-JUnit test for the rules.
 2. **Application** — new folder `application/<usecase>/` with
    `<UseCase>Command` (or a query), `<UseCase>Handler` (`@Service`,
    `@Transactional`, constructor injection, thin), and a result/view record if
@@ -56,7 +58,7 @@ Worked example with full explanations: [docs/13-slice-1-walkthrough.md](13-slice
 
 - Business rules: plain JUnit + AssertJ, no Spring context.
 - End-to-end: `@SpringBootTest(RANDOM_PORT)` + `@Import(TestcontainersConfiguration.class)`
-  + `@AutoConfigureRestTestClient` + `RestTestClient`. Real Postgres, never H2.
+  - `@AutoConfigureRestTestClient` + `RestTestClient`. Real Postgres, never H2.
 - `BigDecimal` assertions: `isEqualByComparingTo`, never `isEqualTo`.
 
 ## Writing a domain unit test — 5 steps
@@ -95,11 +97,11 @@ The type is not cosmetic: `GlobalExceptionHandler` maps it straight to an HTTP
 status, so the wrong type in the domain ships the wrong status code. Pick the
 one matching the response [docs/05](05-api-spec.md) promises.
 
-| The problem is… | Throw | Client gets |
-|---|---|---|
-| A bad **argument** — null, malformed, out of range | `IllegalArgumentException` | 400 |
-| Arguments fine, the **current state** forbids it | `IllegalStateException` | 409 |
-| No aggregate with that **id** | `<Aggregate>NotFoundException` (extends `EntityNotFoundException`) | 404 |
+| The problem is…                                    | Throw                                                              | Client gets |
+| -------------------------------------------------- | ------------------------------------------------------------------ | ----------- |
+| A bad **argument** — null, malformed, out of range | `IllegalArgumentException`                                         | 400         |
+| Arguments fine, the **current state** forbids it   | `IllegalStateException`                                            | 409         |
+| No aggregate with that **id**                      | `<Aggregate>NotFoundException` (extends `EntityNotFoundException`) | 404         |
 
 Deciding between the first two — _did the caller send something wrong, or did
 they ask for something wrong?_ Junk input is 400; a legal request the aggregate
@@ -107,8 +109,7 @@ won't perform right now is 409.
 
 Two more the handler maps, thrown outside the domain so never asserted in a
 domain test: `MethodArgumentNotValidException` (`@Valid` on a request DTO) →
-400, and `DataIntegrityViolationException` (FK/unique violation from the DB) →
-409. Those belong in the slice's `*E2ETest`.
+400, and `DataIntegrityViolationException` (FK/unique violation from the DB) → 409. Those belong in the slice's `*E2ETest`.
 
 ## Writing a slice E2E test — 5 steps
 
