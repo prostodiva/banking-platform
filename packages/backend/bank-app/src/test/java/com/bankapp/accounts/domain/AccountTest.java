@@ -11,6 +11,15 @@ class AccountTest {
 
     private static final UUID OWNER = UUID.randomUUID();
 
+    private Account activeAccount() {
+        return Account.open(
+            OWNER,
+            AccountType.CHECKING,
+            "USD",
+            new AccountNumber("1234567890")
+        );
+    }
+
     @Test
     void openCreatesActiveAccountWithZeroBalance() {
         Account account = Account.open(
@@ -52,4 +61,85 @@ class AccountTest {
             )
         ).isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void freezeMankesActiveAccountFrozen() {
+        Account account = activeAccount();
+
+        account.freeze();
+
+        assertThat(account.getStatus()).isEqualTo(AccountStatus.FROZEN);
+    }
+
+    @Test
+    void freezeRejectsAnAlreadyFrozenAccount() {
+        Account account = activeAccount();
+
+        account.freeze();
+
+        assertThatThrownBy(account::freeze).isInstanceOf(
+            IllegalStateException.class
+        );
+    }
+
+    @Test
+    void unfreezeMakesFrozenAccountActive() {
+        Account account = activeAccount();
+
+        account.freeze();
+        account.unfreeze();
+
+        assertThat(account.getStatus()).isEqualTo(AccountStatus.ACTIVE);
+    }
+
+    @Test
+    void unfreezeRejectsANonFrozenAccount() {
+        Account account = activeAccount();
+
+        assertThatThrownBy(account::unfreeze).isInstanceOf(
+            IllegalStateException.class
+        );
+    }
+
+    @Test
+    void closeMakesActiveAccountClosed() {
+        Account account = activeAccount();
+
+        account.close();
+
+        assertThat(account.getStatus()).isEqualTo(AccountStatus.CLOSED);
+    }
+
+    @Test
+    void closeMakesFrozenAccountClosed() {
+        Account account = activeAccount();
+        account.freeze();
+
+        account.close();
+
+        assertThat(account.getStatus()).isEqualTo(AccountStatus.CLOSED);
+    }
+
+    @Test
+    void closedAccountCannotBeFrozen() {
+        Account account = activeAccount();
+        account.close();
+
+        assertThatThrownBy(account::freeze).isInstanceOf(
+            IllegalStateException.class
+        );
+    }
+
+    @Test
+    void closedAccountCannotBeUnfrozen() {
+        Account account = activeAccount();
+        account.close();
+
+        assertThatThrownBy(account::unfreeze).isInstanceOf(
+            IllegalStateException.class
+        );
+    }
+
+// ones deposit exists - add closeRejectsAccountWithNonZeroBalance
+
 }

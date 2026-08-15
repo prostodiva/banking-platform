@@ -95,6 +95,39 @@ public class Account {
         return new Account(ownerId, type, currencyCode, accountNumber);
     }
 
+    public void freeze() {
+        if (status != AccountStatus.ACTIVE) {
+            throw new IllegalStateException(
+                "only ACTIVE accounts can be frozen"
+            );
+        }
+        this.status = AccountStatus.FROZEN;
+    }
+
+    public void unfreeze() {
+        if (status != AccountStatus.FROZEN) {
+            throw new IllegalStateException(
+                "only FROZEN account can be unfrozen"
+            );
+        }
+
+        this.status = AccountStatus.ACTIVE;
+    }
+
+    public void close() {
+        if (status == AccountStatus.CLOSED) {
+            throw new IllegalStateException("closed account cannot be closed");
+        }
+
+        if (!balance.isZero()) {
+            throw new IllegalStateException(
+                "account with a non-zero balance cannot be closed"
+            );
+        }
+
+        this.status = AccountStatus.CLOSED;
+    }
+
     public UUID getId() {
         return id;
     }

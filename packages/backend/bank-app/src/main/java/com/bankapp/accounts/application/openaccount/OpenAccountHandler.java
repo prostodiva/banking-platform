@@ -4,7 +4,7 @@ import com.bankapp.accounts.application.port.DomainEventPublisher;
 import com.bankapp.accounts.domain.Account;
 import com.bankapp.accounts.domain.AccountNumber;
 import com.bankapp.accounts.domain.AccountRepository;
-import com.bankapp.accounts.domain.event.AccountOpened;
+import com.bankapp.accounts.domain.events.AccountOpened;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -7,7 +7,7 @@ import com.bankapp.accounts.domain.AccountNumber;
 import com.bankapp.accounts.domain.AccountRepository;
 import com.bankapp.accounts.domain.AccountStatus;
 import com.bankapp.accounts.domain.AccountType;
-import com.bankapp.accounts.domain.event.AccountOpened;
+import com.bankapp.accounts.domain.events.AccountOpened;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

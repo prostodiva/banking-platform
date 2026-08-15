@@ -792,10 +792,10 @@ The interface lives in **domain**, the implementation in **infrastructure**
 Postgres exists. This is the Repository pattern + Dependency Inversion (the D
 in SOLID) in one file.
 
-### 2f. `com/bankapp/accounts/domain/event/AccountOpened.java`
+### 2f. `com/bankapp/accounts/domain/events/AccountOpened.java`
 
 ```java
-package com.bankapp.accounts.domain.event;
+package com.bankapp.accounts.domain.events;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -938,7 +938,7 @@ import com.bankapp.accounts.application.port.DomainEventPublisher;
 import com.bankapp.accounts.domain.Account;
 import com.bankapp.accounts.domain.AccountNumber;
 import com.bankapp.accounts.domain.AccountRepository;
-import com.bankapp.accounts.domain.event.AccountOpened;
+import com.bankapp.accounts.domain.events.AccountOpened;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -1788,7 +1788,7 @@ Everything you need already exists as a pattern above. Files to create:
 1. `accounts/domain/Account.java` — add a `freeze()` method. Rules to enforce
    _inside the aggregate_: only an `ACTIVE` account can be frozen; freezing a
    `CLOSED` account is an `IllegalStateException` (→ your advice already maps it
-   to 409). Add `AccountFrozen` to `domain/event/`.
+   to 409). Add `AccountFrozen` to `domain/events/`.
 2. `accounts/application/freezeaccount/FreezeAccountCommand.java` — record with
    the account id.
 3. `accounts/application/freezeaccount/FreezeAccountHandler.java` — load via the

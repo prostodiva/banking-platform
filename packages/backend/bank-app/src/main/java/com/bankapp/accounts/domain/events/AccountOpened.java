@@ -1,4 +1,4 @@
-package com.bankapp.accounts.domain.event;
+package com.bankapp.accounts.domain.events;
 
 import java.time.Instant;
 import java.util.UUID;
