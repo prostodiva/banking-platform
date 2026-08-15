@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.Exchanger;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +15,6 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 
 import com.bankapp.TestcontainersConfiguration;
 import com.bankapp.accounts.api.dto.AccountResponse;
-import com.bankapp.accounts.domain.Account;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestcontainersConfiguration.class)
