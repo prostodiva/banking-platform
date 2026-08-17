@@ -53,3 +53,24 @@ requirement → test traceability loop. Write the entry _before_ coding the slic
 - Postconditions: 200 with AccountStatus.CLOSED
 - Errors: 404 unknown account id; 409 non-zero balance; 409 account already CLOSED
 - Covered by: `CloseAccountE2ETest`
+
+
+**FR-ACC-06 - Deposit**
+
+- Actor: API client
+- Trigger: `POST /api/accounts/{id}/deposit`
+- Preconditions: AccountStatus.ACTIVE; amount is positive; the currency matches the account
+- Postconditions: 200 with updated balance; MoneyDeposited published
+- Errors: 404 unknown account id; 400 non-positive amount; 409 account is not active; 400 currency mismatch
+- Covered by `DepositMoneyE2ETest`
+
+
+**FR-ACC-07 - Withdraw**
+
+- Actor: API client
+- Trigger: `POST /api/accounts/{id}/withdraw`
+- Preconditions: AccountStatus.ACTIVE; amount is positive; the currency matches the account
+- Postconditions: 200 with updated balance; MoneyWithdrawn published
+- Errors: 404 unknown account id; 400 non-positive amount; 409 account is not active; 409 insufficient funds;
+400 currency mismatch
+- Covered by `WithdrawMoneyE2ETest`

@@ -42,6 +42,21 @@ any handler — that is the point of the port.
 - Consumers: none yet (notifications slice planned)
 - Related: FR-ACC-05
 
+**MoneyDeposited** - accounts context
+
+- Fields: `accountId: UUID`, `ownerId: UUID`, `amount: BigDecimal`, `currencyCode: String`, `occurredAt: Instant`
+- Published by: `DepositMoneyHandler`
+- Consumers: none yet (notifications slice planned)
+- Related: FR-ACC-06
+
+**MoneyWithdrawn** - accounts context
+
+- Fields: `accountId: UUID`, `ownerId: UUID`, `amount: BigDecimal`, `currencyCode: String`, `occurredAt: Instant`
+- Published by: `WithdrawMoneyHandler`
+- Consumers: none yet (notifications slice planned)
+- Related: FR-ACC-07
+
+
 ## Planned events
 
 - `PaymentCompleted` (payments) — consumers: fraud detection (via Kafka,
