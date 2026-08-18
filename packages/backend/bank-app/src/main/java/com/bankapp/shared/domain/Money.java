@@ -62,6 +62,10 @@ public record Money(BigDecimal amount, String currencyCode) {
         return amount.signum() == 0;
     }
 
+    public boolean isPositive() {
+        return amount.signum() > 0;
+    }
+
     private void requireSameCurrency(Money other) {
         if (!currencyCode.equals(other.currencyCode)) {
             throw new IllegalArgumentException(

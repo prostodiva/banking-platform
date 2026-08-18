@@ -1,6 +1,6 @@
 # 04 Domain Model
 
-## Accounts context (Slice 1 & 2)
+## Accounts context 
 
 **Account** — aggregate root.
 
@@ -15,7 +15,10 @@
   - only ACTIVE accounts can be frozen;
   - only FROZEN accounts can be unfrozen
   - only ACTIVE or FROZEN accounts with zero balance can close
-- Events: `AccountOpened`, `AccountFrozen`,`AccountUnfrozen`, `AccountClosed`.
+  - money moves only on ACTIVE accounts (deposit and withdraw)
+  - the amount must be positive and in the account's currency
+  - balance never goes negative — a withdrawal above the balance is refused
+- Events: `AccountOpened`, `AccountFrozen`,`AccountUnfrozen`, `AccountClosed`, `MoneyDeposited`, `MoneyWithdrawn`.
 
 **Money** — shared-kernel value object: `BigDecimal amount` + ISO `currencyCode`;
 immutable; same-currency arithmetic only; max 4 decimal places.

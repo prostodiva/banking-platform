@@ -161,3 +161,83 @@ client.post().uri("/api/accounts/" + id + "/freeze")
 back — an E2E test writes rows that outlive it. So create the data each test
 needs, use `UUID.randomUUID()` for "not found" cases, and never assert on row
 counts or "the only account".
+
+### Endpoints that take a request body
+
+Money endpoints (`/deposit`, `/withdraw`, later `/transfers`) add three things
+to the five steps above. Reference: `DepositMoneyE2ETest`.
+
+**1. A request helper that stops at `.exchange()`.** Most tests on these
+endpoints assert only a status, and an error response has a different JSON shape
+than the success DTO — a helper that deserialized `AccountResponse` would fail
+on every error case:
+
+```java
+private RestTestClient.ResponseSpec deposit(
+    UUID accountId,
+    String amount,
+    String currencyCode
+) {
+    return client
+        .post()
+        .uri("/api/accounts/" + accountId + "/deposit")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(
+            Map.of("amount", new BigDecimal(amount),
+                   "currencyCode", currencyCode)
+        )
+        .exchange();
+}
+```
+
+Each test picks up from there: `deposit(id, "100.00", "USD").expectStatus()…`.
+Amount as a `String` parameter, `new BigDecimal(...)` inside — never
+`BigDecimal.valueOf(100.00)`, which launders the value through a `double`.
+
+**2. Two different 400s. Test one of each.** Same status, opposite ends of the
+request:
+
+| Body                                      | Rejected by                                     | Exception                        |
+| ----------------------------------------- | ----------------------------------------------- | -------------------------------- |
+| `amount: -50` or `amount: 0`              | `@Positive` on the request DTO, before the handler runs | `MethodArgumentNotValidException` |
+| `currencyCode: "RUB"` into a USD account  | `Money.requireSameCurrency`, inside the aggregate | `IllegalArgumentException`       |
+
+The second passes validation — `RUB` is three letters and a real ISO code — and
+only fails once the domain does arithmetic with it. Delete `@Valid` from the
+controller and the first case turns into a 500 while the second stays green;
+that asymmetry is the whole reason to write both.
+
+**3. After a refused money move, GET the account and assert the balance.** A 409
+proves the request was rejected. It does not prove nothing was written — a
+handler that debits and then throws also returns 409. Reading the balance back
+is what makes it a money test:
+
+```java
+deposit(id, "100.00", "USD").expectStatus().isEqualTo(409);
+
+AccountResponse after = client.get().uri("/api/accounts/" + id)
+    .exchange()
+    .expectStatus().isOk()
+    .expectBody(AccountResponse.class)
+    .returnResult().getResponseBody();
+
+assertThat(after.balance()).isEqualByComparingTo(BigDecimal.ZERO);
+```
+
+#### The test list
+
+Take it from the [docs/05](05-api-spec.md) row, one test per documented
+response, plus one for the happy path:
+
+| Test                        | Arrange                        | Expect            |
+| --------------------------- | ------------------------------ | ----------------- |
+| happy path                  | open                           | 200 + new balance |
+| repeated call accumulates   | open, deposit                  | 200 + sum         |
+| frozen account              | open, freeze                   | 409 + unchanged   |
+| closed account              | open, close                    | 409               |
+| non-positive amount         | open                           | 400               |
+| mismatched currency         | open                           | 400               |
+| unknown id                  | —                              | 404               |
+
+Withdraw is this list minus "accumulates", plus the case only it has:
+deposit 50, withdraw 100 → **409**, balance still 50.
