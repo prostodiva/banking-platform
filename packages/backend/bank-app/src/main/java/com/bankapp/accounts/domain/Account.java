@@ -10,6 +10,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+
 import java.time.Instant;
 import java.util.UUID;
 
@@ -126,6 +127,44 @@ public class Account {
         }
 
         this.status = AccountStatus.CLOSED;
+    }
+
+    public void deposit(Money amount) {
+        if (status != AccountStatus.ACTIVE) {
+            throw new IllegalStateException("money moves only on ACTIVE accounts");
+        }
+
+        if (!amount.isPositive()) {
+            throw new IllegalArgumentException(
+                "deposit amount must be positive"
+            );
+        }
+
+        this.balance = balance.add(amount);
+    }
+
+    public void withdraw(Money amount) {
+        if (status != AccountStatus.ACTIVE) {
+            throw new IllegalStateException("money moves only on ACTIVE accounts");
+        }
+
+        if (!amount.isPositive()) {
+            throw new IllegalArgumentException(
+                "a withdrawal amount must be positive"
+            );
+        }
+
+        Money remaining = balance.subtract(amount);
+        if (remaining.isNegative()) {
+            throw new IllegalStateException(
+                "insufficient funds: balance " +
+                balance.amount() +
+                ", requested " +
+                amount.amount()
+            );
+        }
+
+        this.balance = remaining;
     }
 
     public UUID getId() {
