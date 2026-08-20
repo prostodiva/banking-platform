@@ -28,15 +28,26 @@ rather than surfacing at runtime. Enforced by: `spring.jpa.hibernate.ddl-auto=va
 without Spring; integration tests run against real Postgres (Testcontainers);
 H2 is banned. Enforced by: test conventions (docs/11), `TestcontainersConfiguration`.
 
-**NFR-07 — Architecture boundaries hold.** No framework behavior in domain, no
-cross-slice coupling. Enforced by: `ArchitectureTest` (ArchUnit, docs/13 stage 6).
+**NFR-07 — Architecture boundaries hold.** No framework behavior in domain; a
+context reaches another only through its published `application.port..`, never
+its `domain`, `infrastructure` or `api`. Enforced by: `ArchitectureTest`
+(ArchUnit, docs/13 stage 6; port carve-out per ADR-003).
 
 **NFR-08 — No secrets in git.** Credentials arrive via environment variables;
 committed files carry only throwaway dev defaults. Enforced by: `.gitignore`
 (.env, keys, local configs), env-var placeholders in `application.properties`.
 
+**NFR-09 — Idempotent submission.** An endpoint that moves money must be safe to
+retry: the same `Idempotency-Key` replays the original response, performs the
+operation once and publishes its event once. Enforced by: unique index on the
+key column, replay path in the handler, E2E replay test (ADR-003).
+
+**NFR-10 — Atomicity across aggregates.** An operation spanning more than one
+aggregate commits completely or not at all; no partial application is
+observable. Enforced by: one `@Transactional` handler per use case, ordered lock
+acquisition to avoid deadlock, E2E rollback test (ADR-003).
+
 ## Planned (added with the slice that introduces them)
 
-- Idempotency of payment submission (payments slice — will need an ADR)
 - Rate limiting, caching (Redis), observability/metrics (per docs/00 goals)
 - Authorization

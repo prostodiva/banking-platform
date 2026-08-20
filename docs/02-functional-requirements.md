@@ -74,3 +74,24 @@ requirement → test traceability loop. Write the entry _before_ coding the slic
 - Errors: 404 unknown account id; 400 non-positive amount; 409 account is not active; 409 insufficient funds;
 400 currency mismatch
 - Covered by `WithdrawMoneyE2ETest`
+
+
+## Payments context
+
+**FR-PAY-01 - Transfer money**
+
+- Actor: API client
+- Trigger: `POST /api/payments/transfers` with an `Idempotency-Key` header
+- Preconditions: both accounts exist and are ACTIVE; they are different accounts; amount is positive and in both accounts' currency; `Idempotency-Key` header present
+- Postconditions: 201 + Location, TransferResponse; both balances updated atomically; transfer persisted; `PaymentCompleted` published once. A retry with the same key replays the original 201 response, moves no money and publishes nothing
+- Errors: 400 currency mismatch; 400 same account transfer; 400 missing an Idempotency-Key header; 400 non-positive amount; 404 unknown account; 409 concurrent modification; 409 insufficient funds; 409 non-active account; 422 same key, diff. body
+- Covered by: `TransferMoneyE2ETest`, `TransferTest`
+
+**FR-PAY-02 - View transfer**
+
+- Actor: API client
+- Trigger: `GET /api/payments/transfers/{id}`
+- Preconditions: none
+- Postconditions: 200 with TransferResponse (id, fromAccountId, toAccountId, amount, currencyCode, createdAt)
+- Errors: 404 unknown transfer id
+- Covered by: `TransferMoneyE2ETest`

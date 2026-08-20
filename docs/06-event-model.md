@@ -56,8 +56,16 @@ any handler — that is the point of the port.
 - Consumers: none yet (notifications slice planned)
 - Related: FR-ACC-07
 
+**PaymentCompleted** - payments context
 
-## Planned events
-
-- `PaymentCompleted` (payments) — consumers: fraud detection (via Kafka,
-  the docs/00 flow: payment → Kafka → fraud detection → notification)
+- Fields: `transferId: UUID`, `fromAccountId: UUID`, `toAccountId: UUID`, `amount: BigDecimal`, `currencyCode: String`, `idempotencyKey: String`, `occurredAt: Instant`
+- Published by: `TransferMoneyHandler`, after `save`, inside the transaction
+- Published **once per committed transfer**: a replayed request returns the
+  stored response and publishes nothing, or one client retry would become five
+  payments downstream (ADR-003 decisions 5–6)
+- The only event a transfer emits — `moveMoney` fires no `MoneyWithdrawn` /
+  `MoneyDeposited`, so one transfer is one fact, not three
+- Consumers: none yet — fraud detection planned (slice 6), which is when the
+  in-process adapter is replaced by Kafka: payment → Kafka → fraud detection →
+  notification (docs/00)
+- Related: FR-PAY-01
