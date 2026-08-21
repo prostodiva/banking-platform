@@ -45,6 +45,13 @@ its `domain`, `infrastructure` or `api`. Enforced by: `ArchitectureTest`
 committed files carry only throwaway dev defaults. Enforced by: `.gitignore`
 (.env, keys, local configs), env-var placeholders in `application.properties`.
 
+A dev *default* is only acceptable where using it in production is obviously
+broken (`local-dev-only-change-me` as a DB password fails to connect anywhere
+real). **Signing keys get no default at all** — `${JWT_SECRET}` with no `:`
+fallback, so a misconfigured deployment fails to start instead of signing tokens
+with a value that is public on GitHub. A committed fallback HMAC secret is one of
+the most common real-world token-forgery breaches.
+
 **NFR-09 — Idempotent submission.** An endpoint that moves money must be safe to
 retry: the same `Idempotency-Key` replays the original response, performs the
 operation once and publishes its event once. Enforced by: unique index on the
@@ -55,7 +62,51 @@ aggregate commits completely or not at all; no partial application is
 observable. Enforced by: one `@Transactional` handler per use case, ordered lock
 acquisition to avoid deadlock, E2E rollback test (ADR-003).
 
+**NFR-11 — Deny by default; identity comes from the token.** Every endpoint
+requires authentication unless explicitly whitelisted (`/api/auth/**`, health).
+The caller's identity is read from the validated token, **never from the request
+body or a path parameter the client chose**. A client cannot open an account for
+another `ownerId`, or deposit into an account it does not own, by editing JSON.
+Enforced by: `anyRequest().authenticated()` as the terminal rule in the filter
+chain (not `permitAll`), `ownerId` removed from `OpenAccountRequest`, ownership
+checks in the handler, and an E2E test per endpoint asserting 403 when the token
+belongs to someone else.
+
+Until slice 5 lands this is knowingly violated — `ownerId` is a request field
+today. That is the retrofit, and the test that proves it is what closes it.
+
+**NFR-12 — No administrative surface is reachable.** Operational endpoints
+(Spring Actuator, and anything like it added later) expose configuration, heap
+and threads — `/actuator/env` prints the datasource password, `/actuator/heapdump`
+hands over a file containing every secret in memory. Enforced by: explicit
+`management.endpoints.web.exposure.include` whitelist (`health,info` only; never
+`*`), `management.server.port` separate from the API port so an edge rule can
+drop it, and Spring Security covering the management context. Actuator is not a
+dependency yet — this becomes live the moment observability work starts.
+
+**NFR-13 — Least-privilege database credentials.** The application runtime must
+not be able to change the schema. Two roles: a migration role owning the tables
+and running Flyway (DDL), and an application role with `SELECT/INSERT/UPDATE` on
+those tables and no `DROP`, no `TRUNCATE`, no ownership. Enforced by: a Flyway
+migration that creates the app role and grants, `spring.flyway.user` /
+`spring.flyway.password` distinct from `spring.datasource.*`.
+
+Today both are `bankapp`, the database owner, so a SQL-injection or a bad
+migration can drop the ledger. Cheap to fix and independent of every other
+slice.
+
+**NFR-14 — Rate limiting on credential and money endpoints.** `POST /api/auth/login`
+and `/refresh` are credential-stuffing targets; `POST /api/payments/transfers` is
+an abuse target. Limits are per-identity where a token exists and per-IP before
+it does. Enforced by: a token-bucket filter backed by Redis (already in
+`docker-compose` under the `cache` profile), responding **429** with a
+`Retry-After` header, and an E2E test asserting the 429.
+
+Per-IP is weak on its own — an attacker rotates addresses — so the login limiter
+also counts failures per *username*, which is what actually blunts credential
+stuffing.
+
 ## Planned (added with the slice that introduces them)
 
-- Rate limiting, caching (Redis), observability/metrics (per docs/00 goals)
-- Authorization
+- Caching (Redis), observability/metrics (per docs/00 goals)
+- Field-level encryption, if a PII column ever appears (docs/07)

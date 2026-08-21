@@ -15,8 +15,17 @@ first, then domain, application, api, tests: checklist in
 | 6   | Fraud detection           | FR-FRD-01       | none (event consumer)                                        | Kafka, async consumers, eventual consistency, `@TransactionalEventListener(AFTER_COMMIT)`                                      |
 | 7   | Notifications             | FR-NOT-01       | none (event consumer)                                        | Strategy pattern: email / SMS / push behind one interface                                                                      |
 | 8   | Reports                   | FR-REP-01/02    | `GET /api/reports/…`                                         | CQRS read side: thin domain, query-heavy projections                                                                           |
+| 9   | Hardening                 | NFR-12/13/14    | none (config, filters, one migration)                        | Configuration security: actuator exposure, Redis token-bucket rate limiting + `429`, least-privilege DB roles, security headers, CORS |
+| 10  | Extraction                | —               | unchanged (routing moves to a gateway)                       | Monolith → services: which seams actually cut, internal-only networking, service-to-service auth, RS256 paying off              |
 
 Slices 1–4 are built; 5 onward are the plan.
+
+Slices 9 and 10 are the security and operations half — see
+[docs/07](07-authetication.md) "Configuration failures". They sit at the end
+because both need something to protect, with **one exception**: the
+least-privilege database split (NFR-13) is a single migration plus two config
+properties, depends on no other slice, and should happen before anything is
+deployed rather than waiting for slice 9.
 
 ## Why this order
 
@@ -30,6 +39,15 @@ Slices 1–4 are built; 5 onward are the plan.
   20, but not worth paying before the domain is interesting.
 - **Each slice must teach something new.** A slice that only repeats
   load → decide → save → publish is cheap to add later and proves nothing.
+- **Hardening after reports, not before auth.** Rate limiting needs endpoints
+  worth limiting and a login to protect; actuator lockdown needs actuator to
+  exist. Doing this at slice 5 would mean guarding two endpoints and calling it
+  a security story.
+- **Extraction last, and only as far as it stays honest.** The point is showing
+  the seams were real — payments already talks to accounts through a published
+  port and by id only (ADR-003), so extraction is a deployment change rather
+  than a rewrite. If it turns into a rewrite, the modular monolith was never
+  modular.
 
 ## Picking the next slice (when this list runs out or changes)
 
@@ -70,3 +88,14 @@ Kept as a calibration note, since it was the first slice to span two contexts.
   this recur — name per-context adapters accordingly.
 - **Compiling and unit-green said nothing about the app starting.** That bean
   collision was invisible until an E2E test loaded the context.
+
+## Before slice 5
+
+Settle the JWT signing algorithm in an ADR — HS256 or RS256/ES256, and where the
+key lives ([docs/12](12-open-questions.md)). It is hard to change once tokens are
+issued, and the answer differs depending on whether slice 10 happens.
+
+Slice 5 is the only slice that is mostly a **retrofit**: after it, every endpoint
+from slices 1–4 requires a token, and `ownerId` stops being a request field
+(NFR-11). Budget for editing existing code and existing E2E tests, not just for
+writing new ones.

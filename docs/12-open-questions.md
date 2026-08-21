@@ -72,3 +72,39 @@ that *are* requests — never as a column on `accounts`, whose rows are entities
 exist from the start, since it is also what a double-entry ledger would need,
 and retrofitting it after balances have moved means backfilling history that was
 never recorded.
+## JWT signing algorithm — HS256 or RS256
+
+**Slice 5 (auth). Blocks coding — settle in an ADR.**
+
+HS256 is symmetric: one secret both signs and verifies, so **anyone who can
+verify a token can also mint one**. Fine in a single process. The problem
+arrives at extraction — fraud, notifications and reports all need to *validate*
+tokens, and HS256 hands each of them forging power, so compromising the
+notifications service yields admin tokens.
+
+RS256/ES256 splits the two: the auth service signs with a private key, everyone
+else verifies with a public key served from `/.well-known/jwks.json`. Costs a
+keypair, a JWKS endpoint and `kid` handling — perhaps an hour more than HS256.
+
+### What has to be decided
+
+1. **Which algorithm**, given docs/00 targets 5–8 services. Migrating live
+   tokens after the split is harder than starting asymmetric.
+2. **Where the private key lives** in dev and in a deployment — env var,
+   keystore, or generated per boot (which invalidates tokens on restart).
+3. **Rotation**: publish both keys, switch signing, retire the old after the
+   longest access-token TTL. Worth building the `kid` plumbing up front even if
+   rotation is manual.
+4. **Refresh token storage** — server-side so it can be revoked, which is the
+   only reason it is a separate token from the access token.
+
+### Constraints already fixed
+
+- The verifier pins the expected algorithm and never reads `alg` from the token
+  (`alg: none` and algorithm-confusion attacks — docs/24 Q17).
+- Claims carry `sub`, roles and expiry only. A JWT is signed, not encrypted, so
+  no PII, balances or account numbers (docs/24 Q13).
+- Keys arrive via environment variables, never committed (NFR-08).
+
+Background and the wider crypto picture: [docs/07](07-authetication.md),
+[docs/24](24-security-cards.md).
