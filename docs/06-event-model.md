@@ -6,11 +6,20 @@ application handlers through the `DomainEventPublisher` port — never directly
 from controllers or entities.
 
 Transport today: **in-process** (Spring `ApplicationEventPublisher` behind the
-port, published inside the handler's transaction). When a consumer must only
-react to _committed_ state, it should use
-`@TransactionalEventListener(phase = AFTER_COMMIT)` rather than a plain
-`@EventListener`. Kafka replaces the adapter later (docs/09) without touching
-any handler — that is the point of the port.
+port). Handlers publish inside their transaction, but **the adapter holds the
+event until that transaction commits** — a rolled-back change announces nothing,
+so a plain `@EventListener` is safe and `@TransactionalEventListener(AFTER_COMMIT)`
+is not required to get the guarantee.
+
+That belongs in the adapter rather than in each consumer for two reasons: "one
+committed change, one event" is a promise this file makes on the publisher's
+behalf, and a consumer that forgets the annotation would otherwise silently break
+it. It is also what a Kafka adapter needs (docs/09) — writing to a broker before
+the database commits is the dual-write problem, and doing it here means Kafka
+replaces the adapter without touching a handler.
+
+Trade-off accepted: a consumer cannot join the publisher's transaction. Nothing
+needs to, and for money the safer default is to say nothing until it is durable.
 
 ## Published events
 

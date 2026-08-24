@@ -18,6 +18,7 @@ import com.bankapp.accounts.application.unfreezeaccount.UnfreezeAccountCommand;
 import com.bankapp.accounts.application.unfreezeaccount.UnfreezeAccountHandler;
 import com.bankapp.accounts.application.withdrawmoney.WithdrawMoneyCommand;
 import com.bankapp.accounts.application.withdrawmoney.WithdrawMoneyHandler;
+import com.bankapp.accounts.domain.exceptions.AccountNotFoundException;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.UUID;
@@ -76,12 +77,17 @@ public class AccountController {
         ).body(AccountResponse.from(result));
     }
 
+    /**
+     * Throws rather than returning {@code notFound().build()}, so an unknown id
+     * answers with a ProblemDetail body like every other error in this API.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<AccountResponse> get(@PathVariable UUID id) {
-        return getAccount
+        AccountView view = getAccount
             .handle(id)
-            .map(view -> ResponseEntity.ok(AccountResponse.from(view)))
-            .orElseGet(() -> ResponseEntity.notFound().build());
+            .orElseThrow(() -> new AccountNotFoundException(id));
+
+        return ResponseEntity.ok(AccountResponse.from(view));
     }
 
     @PostMapping("/{id}/freeze")

@@ -319,13 +319,23 @@ public class TransferMoneyE2ETest {
         assertThat(balanceOf(from.id())).isEqualByComparingTo("100.00");
     }
 
+    /** 404 carries a ProblemDetail body, like every other error in this API. */
     @Test
     void returns404ForAnUnknownTransfer() {
+        UUID unknown = UUID.randomUUID();
+
         client
             .get()
-            .uri("/api/payments/transfers/" + UUID.randomUUID())
+            .uri("/api/payments/transfers/" + unknown)
             .exchange()
             .expectStatus()
-            .isNotFound();
+            .isNotFound()
+            .expectHeader()
+            .contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON)
+            .expectBody()
+            .jsonPath("$.status")
+            .isEqualTo(404)
+            .jsonPath("$.detail")
+            .value(detail -> assertThat((String) detail).contains(unknown.toString()));
     }
 }

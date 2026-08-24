@@ -3,6 +3,8 @@ package com.bankapp.payments.api;
 import com.bankapp.payments.api.dto.TransferRequest;
 import com.bankapp.payments.api.dto.TransferResponse;
 import com.bankapp.payments.application.gettransfer.GetTransferHandler;
+import com.bankapp.payments.application.gettransfer.TransferView;
+import com.bankapp.payments.domain.exceptions.TransferNotFoundException;
 import com.bankapp.payments.application.transfermoney.TransferMoneyCommand;
 import com.bankapp.payments.application.transfermoney.TransferMoneyHandler;
 import com.bankapp.payments.application.transfermoney.TransferMoneyResult;
@@ -61,11 +63,17 @@ public class TransferController {
         ).body(TransferResponse.from(result));
     }
 
+    /**
+     * Throws rather than returning {@code notFound().build()}, so an unknown id
+     * answers with a ProblemDetail body like every other error in this API. A bare
+     * 404 leaves a client following a stale Location header with nothing to parse.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<TransferResponse> get(@PathVariable UUID id) {
-        return getTransfer
+        TransferView view = getTransfer
             .handle(id)
-            .map(view -> ResponseEntity.ok(TransferResponse.from(view)))
-            .orElseGet(() -> ResponseEntity.notFound().build());
+            .orElseThrow(() -> new TransferNotFoundException(id));
+
+        return ResponseEntity.ok(TransferResponse.from(view));
     }
 }

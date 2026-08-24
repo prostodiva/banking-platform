@@ -3,8 +3,8 @@ package com.bankapp.shared.web;
 import com.bankapp.shared.domain.EntityNotFoundException;
 import com.bankapp.shared.domain.UnprocessableRequestException;
 import java.util.stream.Collectors;
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -59,12 +59,23 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Someone else changed the same aggregate first and {@code @Version} caught it
-     * (ADR-002). The request was well formed, so this is a 409 the caller may
-     * simply retry — not the 500 an unmapped infrastructure exception would give.
+     * Someone else touched the same rows first. Two ways that happens here, both
+     * retryable and both 409 rather than the 500 an unmapped infrastructure
+     * exception would give:
+     *
+     * <ul>
+     *   <li>{@code OptimisticLockingFailureException} — {@code @Version} caught a
+     *       lost update (ADR-002).
+     *   <li>{@code DeadlockLoserDataAccessException} — Postgres picked this
+     *       transaction to kill. A transfer locks two `accounts` rows
+     *       (ADR-003 §3), so deadlock is reachable, not theoretical.
+     * </ul>
+     *
+     * Catching the shared parent covers both: the caller's instruction is the
+     * same either way, which is "send it again".
      */
-    @ExceptionHandler(OptimisticLockingFailureException.class)
-    ProblemDetail onOptimisticLockingFailure(OptimisticLockingFailureException ex) {
+    @ExceptionHandler(ConcurrencyFailureException.class)
+    ProblemDetail onConcurrencyFailure(ConcurrencyFailureException ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
         problem.setTitle("Concurrent modification");
         problem.setDetail(

@@ -42,9 +42,15 @@ class AccountLedgerAdapter implements AccountLedger {
             );
         }
 
-        // Load in sorted id order so concurrent A→B and B→A transfers touch the
-        // two rows in the same order (ADR-003 §3). Hibernate flushes updates in
-        // persistence-context order, so load order is what decides lock order.
+        // Sorted id order, so concurrent A→B and B→A transfers touch the two rows
+        // in the same order (ADR-003 §3).
+        //
+        // Note what actually takes the locks: findById does not — it is a plain
+        // SELECT. The row locks come from the UPDATEs Hibernate emits at flush, so
+        // the ordering that matters is theirs, and that is enforced by
+        // `hibernate.order_updates=true` in application.properties (sorts updates
+        // by primary key). Loading in the same order keeps this code honest and
+        // readable, but the property is the guarantee — don't remove it.
         boolean fromIsLower = fromAccountId.compareTo(toAccountId) < 0;
         Account lower = load(fromIsLower ? fromAccountId : toAccountId);
         Account higher = load(fromIsLower ? toAccountId : fromAccountId);

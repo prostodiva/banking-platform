@@ -6,6 +6,7 @@ import com.bankapp.accounts.domain.exceptions.AccountNotFoundException;
 import com.bankapp.payments.domain.exceptions.IdempotencyKeyConflictException;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DeadlockLoserDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -30,8 +31,22 @@ class GlobalExceptionHandlerTest {
     /** ADR-003 §3: a lost-update collision is a retryable 409, not a 500. */
     @Test
     void mapsOptimisticLockingFailureTo409() {
-        ProblemDetail problem = handler.onOptimisticLockingFailure(
+        ProblemDetail problem = handler.onConcurrencyFailure(
             new OptimisticLockingFailureException("Row was updated by another transaction")
+        );
+
+        assertThat(problem.getStatus()).isEqualTo(HttpStatus.CONFLICT.value());
+        assertThat(problem.getTitle()).isEqualTo("Concurrent modification");
+    }
+
+    /**
+     * A transfer locks two accounts rows, so Postgres can pick this transaction as
+     * the deadlock victim. Same family, same retryable 409 — not a 500.
+     */
+    @Test
+    void mapsDeadlockLoserTo409() {
+        ProblemDetail problem = handler.onConcurrencyFailure(
+            new DeadlockLoserDataAccessException("deadlock detected", null)
         );
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.CONFLICT.value());
@@ -40,8 +55,8 @@ class GlobalExceptionHandlerTest {
 
     /** The detail must not leak the entity class and id Spring puts in the message. */
     @Test
-    void optimisticLockingDetailDoesNotEchoTheInternalMessage() {
-        ProblemDetail problem = handler.onOptimisticLockingFailure(
+    void concurrencyFailureDetailDoesNotEchoTheInternalMessage() {
+        ProblemDetail problem = handler.onConcurrencyFailure(
             new OptimisticLockingFailureException(
                 "Row was updated or deleted by another transaction " +
                 "(com.bankapp.accounts.domain.Account#some-id)"

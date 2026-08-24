@@ -12,7 +12,10 @@ public interface TransferRepository {
     /**
      * The idempotency fast path: a hit means this request already ran, so the
      * caller replays the stored result instead of moving money again (ADR-003 §6).
-     * Also the re-read after the unique index rejects a concurrent duplicate.
+     *
+     * <p>This is the only lookup by key. The amended §6 explains why there is no
+     * second one after a unique-index violation — that re-read cannot run in a
+     * transaction already marked rollback-only.
      */
     Optional<Transfer> findByIdempotencyKey(String idempotencyKey);
 }
