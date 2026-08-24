@@ -10,7 +10,15 @@ binary floating point is banned for money. Enforced by: `Money` value object
 
 **NFR-02 — No lost updates.** Concurrent modifications of the same aggregate
 must fail loudly, never silently overwrite. Enforced by: `@Version` optimistic
-locking on every aggregate table (ADR-002).
+locking on every **mutable** aggregate table (ADR-002), and an
+`OptimisticLockingFailureException` → 409 mapping so the collision reaches the
+caller as a retryable status rather than a 500.
+
+Write-once aggregates are exempt, and `Transfer` is the first: it is inserted and
+never updated (ADR-003 decision 4), so there is no second writer for a version
+column to detect. A version on an immutable row documents a concurrency story
+that does not exist — the same reasoning that removed its `status` field.
+Covered by `TransferOptimisticLockingTest`.
 
 **NFR-03 — Auditable schema history.** Schema changes only via versioned Flyway
 migrations; applied migrations are immutable; financial records are never

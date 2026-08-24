@@ -6,6 +6,41 @@ leaves this file when [docs/adr/](adr/) answers it.
 _Idempotency of payment submission — closed by [ADR-003](adr/03.md)
 (decisions 6–7) and recorded as NFR-09._
 
+## Replaying a simultaneous duplicate request
+
+**Slice 4 (payments). Does not block — the safe half already holds.**
+
+[ADR-003](adr/03.md) decision 6 wants the loser of a same-key race to replay the
+original 201. It returns **409** instead: a constraint violation at flush marks
+the transaction rollback-only, so the re-read the decision describes cannot run
+inside the handler. The ADR carries the amendment.
+
+Nothing unsafe follows from it — one transfer, one movement, one event, pinned by
+`ConcurrentTransferE2ETest`. Only the status is wrong, and only for two requests
+genuinely in flight at once; a client retrying after a timeout takes the fast path
+and gets its 201.
+
+The fix is a retry outside the transaction boundary: catch
+`DataIntegrityViolationException` in a non-transactional caller, re-invoke, let
+the fast path find the committed row. What is undecided is **where that caller
+lives** — a wrapper bean around the handler, a `@Retryable`, or the controller —
+and whether the same wrapper should also absorb `OptimisticLockingFailureException`,
+which is likewise a retry the caller is currently asked to perform itself.
+
+## Money on the wire: JSON number or string
+
+**All slices. Not blocking — but it gets more expensive per endpoint added.**
+
+`AccountResponse.balance` and `TransferResponse.amount` serialize as JSON
+numbers. `BigDecimal` exists in this codebase precisely because binary floating
+point is banned for money (NFR-01), and a JSON number lands in a JavaScript
+client as a double — reintroducing the hazard at the boundary the domain guards
+everywhere else. Most payment APIs send strings for this reason.
+
+Changing it is one Jackson setting, but it changes every response and the
+frontend that reads them, so it is a project-wide decision rather than a payments
+one. Decide before the React client starts parsing balances.
+
 ## Visibility of failed transfers
 
 **Slice 4 (payments). Does not block coding — accepted consequence for now.**

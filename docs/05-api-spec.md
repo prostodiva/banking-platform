@@ -68,14 +68,17 @@ its own, not a sub-resource of either account.
 | `amount`        | string (BigDecimal) | required, > 0, max 4 decimal places          |
 | `currencyCode`  | string              | required, ISO 4217, must match both accounts |
 
-**TransferResponse**:
+**TransferResponse** — `amount` serializes as a JSON **number**, matching
+`AccountResponse.balance`. Money as a number is a precision hazard in a JS client
+(it becomes a double); switching to strings is a project-wide call, not a
+per-endpoint one — see [docs/12](12-open-questions.md).
 
 ```json
 {
   "id": "uuid",
   "fromAccountId": "uuid",
   "toAccountId": "uuid",
-  "amount": "25.0000",
+  "amount": 25.0000,
   "currencyCode": "USD",
   "createdAt": "2026-08-20T10:15:30Z"
 }

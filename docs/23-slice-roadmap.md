@@ -16,7 +16,7 @@ first, then domain, application, api, tests: checklist in
 | 7   | Notifications             | FR-NOT-01       | none (event consumer)                                        | Strategy pattern: email / SMS / push behind one interface                                                                      |
 | 8   | Reports                   | FR-REP-01/02    | `GET /api/reports/…`                                         | CQRS read side: thin domain, query-heavy projections                                                                           |
 
-Slices 1–2 are done or in progress; 3 onward are the plan.
+Slices 1–4 are built; 5 onward are the plan.
 
 ## Why this order
 
@@ -51,10 +51,22 @@ Slices 1–2 are done or in progress; 3 onward are the plan.
 - `ArchitectureTest` passes untouched. Relaxing an ArchUnit rule to make a slice
   compile means the design is wrong, not the rule.
 
-## Before slice 4
+## What slice 4 actually cost
 
-Write ADR-003 first: payments cannot import `accounts.domain.Account`, so a
-transfer needs either an application port exposed by accounts or event
-choreography. Decide, record the reasoning, then build. Same for where the
-idempotency key lives and what a replayed request returns. Until then those go
-in [docs/12](12-open-questions.md).
+Kept as a calibration note, since it was the first slice to span two contexts.
+
+- **The ADR paid for itself, and was still wrong in one place.** Writing
+  [ADR-003](adr/03.md) before coding settled the port, the transaction and the
+  idempotency key cleanly. But decision 6's replay-on-unique-violation flow turned
+  out to be unimplementable — Hibernate marks a constraint violation
+  rollback-only — and only writing the code revealed it. Design docs are worth
+  writing first and worth amending after.
+- **The ArchUnit rule needed changing before any code compiled.** Expected and
+  recorded in advance; the point is that it was a deliberate amendment with the
+  net rule set stricter, not a rule relaxed to make a slice build.
+- **A copied class name broke the whole application.** Two `@Component`s named
+  `SpringDomainEventPublisher` in different contexts collide, because Spring
+  derives bean names from the simple class name. Parallel slice structure makes
+  this recur — name per-context adapters accordingly.
+- **Compiling and unit-green said nothing about the app starting.** That bean
+  collision was invisible until an E2E test loaded the context.
