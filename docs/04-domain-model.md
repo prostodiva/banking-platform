@@ -1,6 +1,6 @@
 # 04 Domain Model
 
-## Accounts context 
+## Accounts context (Slices 1-3)
 
 **Account** — aggregate root.
 
@@ -41,3 +41,29 @@ to users only by UUID.
                CLOSED ◄──────────────────┘
                      (terminal — banks never delete history)
 ```
+
+## Payments context (Slice 4)
+
+**Transfer** — aggregate root. A record of a movement that *already happened*,
+not a workflow: no `status`, no PENDING/FAILED (ADR-003 decision 4).
+
+- Identity: `id` (UUID, assigned at creation).
+- State: `fromAccountId`, `toAccountId` (UUID — references into the accounts
+  context _by id only_, no FK: the two tables would live in different databases
+  after an extraction), `amount` (Money), `idempotencyKey` (String, client-chosen,
+  unique), `createdAt` (Instant).
+- Invariants (enforced inside the aggregate):
+  - created via `Transfer.record(...)` only, and immutable afterwards — a
+    committed transfer succeeded, a rolled-back one leaves no row
+  - `fromAccountId` and `toAccountId` must differ
+  - amount must be positive
+  - `idempotencyKey` is required
+- Events: `PaymentCompleted` (once per committed transfer; a replay publishes
+  nothing).
+
+`Transfer` deliberately does **not** restate the balance rules — ACTIVE-only,
+matching currency, never negative. Those are `Account` invariants (above) and
+stay in that one class; `payments` reaches them through the `AccountLedger` port
+and holds no `Account` (ADR-003 decision 1). Safe retry is likewise not an
+aggregate invariant: it is enforced by the unique index on `idempotencyKey` plus
+the handler's replay path (NFR-09).
