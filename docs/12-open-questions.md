@@ -6,6 +6,11 @@ leaves this file when [docs/adr/](adr/) answers it.
 _Idempotency of payment submission — closed by [ADR-003](adr/03.md)
 (decisions 6–7) and recorded as NFR-09._
 
+_JWT signing algorithm, key custody, refresh-token storage — closed by
+[ADR-004](adr/04.md) (decisions 1–4): RS256 with a published JWKS, private key
+from the environment with no default, `kid` from the first commit, opaque
+refresh tokens hashed at rest and rotated on use._
+
 ## Replaying a simultaneous duplicate request
 
 **Slice 4 (payments). Does not block — the safe half already holds.**
@@ -72,39 +77,21 @@ that *are* requests — never as a column on `accounts`, whose rows are entities
 exist from the start, since it is also what a double-entry ledger would need,
 and retrofitting it after balances have moved means backfilling history that was
 never recorded.
-## JWT signing algorithm — HS256 or RS256
 
-**Slice 5 (auth). Blocks coding — settle in an ADR.**
+## Admin ownership checks on customer resources
 
-HS256 is symmetric: one secret both signs and verifies, so **anyone who can
-verify a token can also mint one**. Fine in a single process. The problem
-arrives at extraction — fraud, notifications and reports all need to *validate*
-tokens, and HS256 hands each of them forging power, so compromising the
-notifications service yields admin tokens.
+**Slice 5 (auth). Does not block — the endpoints don't exist yet.**
 
-RS256/ES256 splits the two: the auth service signs with a private key, everyone
-else verifies with a public key served from `/.well-known/jwks.json`. Costs a
-keypair, a JWKS endpoint and `kid` handling — perhaps an hour more than HS256.
+ADR-004 decision 6 separates the surfaces: `/api/admin/**` is a different path
+tree, not a bypass branch inside the customer handlers. What it does not settle
+is **what an admin may actually read**. "Any account" is the easy answer and the
+one that makes an insider breach unbounded; a support agent looking up a
+customer they have no ticket for is the canonical abuse.
 
-### What has to be decided
+Options when the first admin endpoint is written: unrestricted plus an
+append-only access log (cheap, detects after the fact), or a scoped grant — an
+admin may read an account only while an open case references it (real
+prevention, needs a case entity this project has no requirement for).
 
-1. **Which algorithm**, given docs/00 targets 5–8 services. Migrating live
-   tokens after the split is harder than starting asymmetric.
-2. **Where the private key lives** in dev and in a deployment — env var,
-   keystore, or generated per boot (which invalidates tokens on restart).
-3. **Rotation**: publish both keys, switch signing, retire the old after the
-   longest access-token TTL. Worth building the `kid` plumbing up front even if
-   rotation is manual.
-4. **Refresh token storage** — server-side so it can be revoked, which is the
-   only reason it is a separate token from the access token.
-
-### Constraints already fixed
-
-- The verifier pins the expected algorithm and never reads `alg` from the token
-  (`alg: none` and algorithm-confusion attacks — docs/24 Q17).
-- Claims carry `sub`, roles and expiry only. A JWT is signed, not encrypted, so
-  no PII, balances or account numbers (docs/24 Q13).
-- Keys arrive via environment variables, never committed (NFR-08).
-
-Background and the wider crypto picture: [docs/07](07-authetication.md),
-[docs/24](24-security-cards.md).
+Deferred until an admin endpoint has a use case behind it. Recording it here so
+that the surface separation isn't mistaken for having answered it.

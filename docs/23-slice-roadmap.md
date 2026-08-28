@@ -91,9 +91,15 @@ Kept as a calibration note, since it was the first slice to span two contexts.
 
 ## Before slice 5
 
-Settle the JWT signing algorithm in an ADR — HS256 or RS256/ES256, and where the
-key lives ([docs/12](12-open-questions.md)). It is hard to change once tokens are
-issued, and the answer differs depending on whether slice 10 happens.
+Settled: [ADR-004](adr/04.md) — RS256 with a published JWKS, key from the
+environment with no default, opaque refresh tokens rotated on use, and how admin
+privilege stays out of a public registration endpoint.
+
+Worked examples, one per story: [docs/28](28-slice-5-register-walkthrough.md)
+register · [docs/29](29-slice-5-login-walkthrough.md) login ·
+[docs/30](30-slice-5-refresh-walkthrough.md) refresh ·
+[docs/31](31-slice-5-logout-walkthrough.md) logout. The NFR-11 retrofit has no
+walkthrough — it is the exercise at the end of docs/31.
 
 Slice 5 is the only slice that is mostly a **retrofit**: after it, every endpoint
 from slices 1–4 requires a token, and `ownerId` stops being a request field
