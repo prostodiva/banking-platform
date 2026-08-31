@@ -83,3 +83,20 @@ per-endpoint one — see [docs/12](12-open-questions.md).
   "createdAt": "2026-08-20T10:15:30Z"
 }
 ```
+
+## AUTH
+
+### POST /api/auth/register
+
+Public. Creates a CUSTOMER and logs them in.
+
+Request: `{ "email": "ann@example.com", "fullName": "Ann Lee", "password": "..." }`
+Response 201: `{ "accessToken": "...", "refreshToken": "...", "tokenType": "Bearer", "expiresAt": "..." }`
+
+No `Location` header — there is no `GET /api/users/{id}` to point at, and a
+Location that 404s is worse than none (ADR-003 consequences).
+
+| Status | When |
+|---|---|
+| 400 | missing/invalid field; password outside 8–72 |
+| 409 | email already registered |

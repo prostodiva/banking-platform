@@ -78,3 +78,12 @@ needs to, and for money the safer default is to say nothing until it is durable.
   in-process adapter is replaced by Kafka: payment → Kafka → fraud detection →
   notification (docs/00)
 - Related: FR-PAY-01
+
+## Auth
+
+**UserRegistered** — auth context
+
+- Fields: `userId: UUID`, `occurredAt: Instant`
+- Published by: `RegisterUserHandler`, after `save`, inside the transaction
+- Consumers: none yet (notifications slice planned: welcome message)
+- Related: FR-AUTH-01
