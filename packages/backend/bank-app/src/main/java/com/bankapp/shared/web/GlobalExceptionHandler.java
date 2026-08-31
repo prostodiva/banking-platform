@@ -3,6 +3,8 @@ package com.bankapp.shared.web;
 import com.bankapp.shared.domain.EntityNotFoundException;
 import com.bankapp.shared.domain.UnprocessableRequestException;
 import java.util.stream.Collectors;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -11,6 +13,17 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+/**
+ * Ordered ahead of Boot's own advice on purpose. {@code
+ * spring.mvc.problemdetails.enabled=true} registers a {@code
+ * ProblemDetailsExceptionHandler} that already handles every standard Spring MVC
+ * exception, {@link MethodArgumentNotValidException} included. An unordered
+ * {@code @RestControllerAdvice} sits at {@code LOWEST_PRECEDENCE} and loses that
+ * race, so without this annotation {@link #onValidationFailure} is dead code and
+ * a failed {@code @Valid} answers with Boot's field-less "Invalid request
+ * content." — a 400 either way, which is why the E2E tests never caught it.
+ */
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
