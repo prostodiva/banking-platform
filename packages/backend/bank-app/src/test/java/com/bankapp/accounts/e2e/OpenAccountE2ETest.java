@@ -78,7 +78,15 @@ class OpenAccountE2ETest {
             .body(Map.of("type", "CHECKING"))
             .exchange()
             .expectStatus()
-            .isBadRequest();
+            .isBadRequest()
+            // The status alone does not prove GlobalExceptionHandler ran: Boot's
+            // ProblemDetailsExceptionHandler answers 400 too. Naming the offending
+            // fields is the behaviour worth pinning.
+            .expectBody()
+            .jsonPath("$.title")
+            .isEqualTo("Validation failed")
+            .jsonPath("$.detail")
+            .value(detail -> assertThat((String) detail).contains("ownerId"));
     }
 
     @Test

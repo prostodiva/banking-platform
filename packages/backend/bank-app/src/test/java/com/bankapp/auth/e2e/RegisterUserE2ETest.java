@@ -152,7 +152,19 @@ class RegisterUserE2ETest extends AbstractE2ETest {
             .body(Map.of("email", uniqueEmail()))
             .exchange()
             .expectStatus()
-            .isBadRequest();
+            .isBadRequest()
+            // Assert the body, not just the status. Boot's own advice also
+            // answers 400 here — with a field-less "Invalid request content." —
+            // so a status-only assertion passes whether or not
+            // GlobalExceptionHandler was ever reached. That is exactly how this
+            // regressed unnoticed from slice 1 until the auth slice.
+            .expectBody()
+            .jsonPath("$.title")
+            .isEqualTo("Validation failed")
+            .jsonPath("$.detail")
+            .value(detail ->
+                assertThat((String) detail).contains("fullName", "password")
+            );
     }
 
     @Test
