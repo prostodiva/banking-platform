@@ -38,13 +38,11 @@ A JWT is **signed, not encrypted** (JWS). The payload is base64 and readable by
 anyone holding the token — so claims carry `sub`, roles and expiry, never
 anything secret. No account numbers, no PII.
 
-**Open decision — signing algorithm.** HS256 (symmetric, one shared secret) vs
-RS256/ES256 (asymmetric, private key signs, public key verifies via a JWKS
-endpoint). HS256 is defensible in a monolith; the problem is that anyone who can
-verify can also mint, so every service that validates a token gets forging
-power. docs/00 targets 5–8 services, which argues for asymmetric before the
-split rather than after it. Settle in an ADR when slice 5 starts — see the
-open-questions entry.
+**Settled — signing algorithm: RS256**, verified against a public JWKS
+(`/.well-known/jwks.json`). HS256 is symmetric, so anyone who can verify can
+also mint, and docs/00 targets 5–8 services that all need to *validate* tokens —
+each would hold forging power. Reasoning, key custody and refresh-token storage:
+[ADR-004](adr/04.md) decisions 1–4.
 
 ## The security boundary
 
@@ -140,6 +138,7 @@ with the other hardening work rather than inflating the auth slice.
 ## Related
 
 docs/02 (FR-AUTH-01…04) · docs/03 NFR-08 (secrets), NFR-11…14 (boundary,
-admin surface, least privilege, rate limiting) · docs/12 (signing algorithm) ·
+admin surface, least privilege, rate limiting) · [ADR-004](adr/04.md) (tokens,
+key custody, privilege separation) · docs/12 (admin ownership checks) ·
 docs/23 slices 5, 9, 10 · docs/18 section F (Spring Security cards) · docs/24
 (cryptography cards)

@@ -95,3 +95,62 @@ requirement → test traceability loop. Write the entry _before_ coding the slic
 - Postconditions: 200 with TransferResponse (id, fromAccountId, toAccountId, amount, currencyCode, createdAt)
 - Errors: 404 unknown transfer id
 - Covered by: `TransferMoneyE2ETest`
+
+
+## Auth Context
+
+Token strategy, key custody and privilege separation: [ADR-004](adr/04.md).
+`role` is never a request field — registration can only produce a CUSTOMER, and
+the first ADMIN is bootstrapped from the environment (ADR-004 decision 5).
+
+**FR-AUTH-01 — Register**
+
+- Actor: anonymous API client
+- Trigger: `POST /api/auth/register`
+- Preconditions: email is well-formed and not already registered; password is 8–72 bytes
+- Postconditions: user persisted with a BCrypt hash and role CUSTOMER; 201 + `AuthResponse`
+  (access token, refresh token, expiry); refresh token persisted hashed; `UserRegistered` published
+- Errors: 400 missing/invalid field (email, fullName, password); 409 email already registered
+- Covered by: `RegisterUserE2ETest`, `UserTest`
+
+**FR-AUTH-02 — Login**
+
+- Actor: anonymous API client
+- Trigger: `POST /api/auth/login`
+- Preconditions: none — the credentials are the precondition
+- Postconditions: 200 + `AuthResponse`; a new refresh token persisted hashed, existing ones
+  left valid (one session per device); `UserLoggedIn` published
+- Errors: 400 missing/malformed field; 401 bad credentials — **one message for both unknown
+  email and wrong password**, and the same elapsed time, or the endpoint becomes a
+  user-enumeration oracle (docs/07)
+- Covered by: `LoginE2ETest`, `LoginHandlerTest`
+
+**FR-AUTH-03 — Refresh**
+
+- Actor: API client holding a refresh token
+- Trigger: `POST /api/auth/refresh`
+- Preconditions: refresh token exists, is unexpired and unrevoked
+- Postconditions: 200 + `AuthResponse` with a **new** access *and* refresh token; the presented
+  token is revoked (single-use rotation, ADR-004 decision 3)
+- Errors: 400 missing token; 401 unknown, expired or already-revoked token — a revoked token
+  presented again revokes every refresh token for that user (replay is indistinguishable from theft)
+- Covered by: `RefreshTokenE2ETest`
+
+**FR-AUTH-04 — Logout**
+
+- Actor: authenticated customer
+- Trigger: `POST /api/auth/logout`
+- Preconditions: valid access token; refresh token in the body
+- Postconditions: 204; that refresh token revoked. The access token stays valid until it expires
+  (≤15 min) — that is inherent to stateless JWTs, not a gap
+- Errors: 401 missing/invalid access token. An unknown or already-revoked refresh token is **204**,
+  not 404 — logout is idempotent and must not report on tokens the caller may not own
+- Covered by: `LogoutE2ETest`
+
+Admin user management (`POST /api/admin/users`, ADR-004 decision 5) has no FR
+yet — the bootstrap admin covers slice 5. It gets FR-AUTH-05 when a second admin
+is actually needed.
+
+**Retrofit — not an FR.** Every endpoint in slices 1–4 becomes authenticated and
+`ownerId` moves from the request body to the token `sub`. That is NFR-11, and it
+changes FR-ACC-01: the 409 unknown-owner error becomes unreachable.
