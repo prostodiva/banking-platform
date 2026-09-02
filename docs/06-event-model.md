@@ -87,3 +87,11 @@ needs to, and for money the safer default is to say nothing until it is durable.
 - Published by: `RegisterUserHandler`, after `save`, inside the transaction
 - Consumers: none yet (notifications slice planned: welcome message)
 - Related: FR-AUTH-01
+
+**UserLoggedIn** — auth context
+
+- Fields: `userId: UUID`, `occurredAt: Instant`
+- Published by: `LoginHandler`, after the tokens are issued, inside the transaction
+- Consumers: none yet (fraud detection planned: login velocity;
+  notifications planned: "new sign-in to your account")
+- Related: FR-AUTH-02

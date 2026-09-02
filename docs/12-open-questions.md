@@ -95,3 +95,25 @@ prevention, needs a case entity this project has no requirement for).
 
 Deferred until an admin endpoint has a use case behind it. Recording it here so
 that the surface separation isn't mistaken for having answered it.
+
+
+## Refresh tokens accumulate without bound
+
+**Slice 5 (auth). Does not block — a correctness question, not a safety one.**
+
+Login mints a refresh token and revokes nothing, so a user who signs in daily for
+a year holds 365 valid 14-day tokens, of which 351 are expired rows nobody
+deletes. Options: a scheduled purge of `expires_at < now()`, a cap of N active
+tokens per user evicting oldest-first, or nothing until the table is measurably a
+problem. Deferred; it is cheap to add and expensive to guess at.
+
+## Should a failed login publish an event?
+
+**Slice 5 (auth). Deferred to the fraud slice.**
+
+`UserLoggedIn` is the weaker signal — credential stuffing shows up as failures.
+The obstacle is that a failure against an unknown address has no `userId` to put
+in the event, and putting the attempted email in one writes an unregistered
+address onto the bus. Options when fraud detection is real: a `LoginFailed`
+carrying only a hash of the attempted address, or move the whole concern to a
+structured audit log that is not an event at all.
