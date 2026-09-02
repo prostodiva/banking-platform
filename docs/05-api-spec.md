@@ -100,3 +100,18 @@ Location that 404s is worse than none (ADR-003 consequences).
 |---|---|
 | 400 | missing/invalid field; password outside 8–72 |
 | 409 | email already registered |
+
+
+### POST /api/auth/login
+
+Public. Exchanges credentials for a token pair.
+
+Request: `{ "email": "ann@example.com", "password": "..." }`
+Response 200: same `AuthResponse` shape as register.
+
+Existing refresh tokens are NOT revoked — one session per device.
+
+| Status | When |
+|---|---|
+| 400 | missing field, or an email that cannot be parsed |
+| 401 | bad credentials — identical body for unknown email and wrong password |

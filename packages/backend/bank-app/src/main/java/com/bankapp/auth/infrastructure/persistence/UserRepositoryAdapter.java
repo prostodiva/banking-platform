@@ -1,9 +1,13 @@
 
 package com.bankapp.auth.infrastructure.persistence;
 
+import com.bankapp.auth.domain.Email;
 import com.bankapp.auth.domain.User;
 import com.bankapp.auth.domain.UserRepository;
 import com.bankapp.auth.domain.exceptions.EmailAlreadyRegisteredException;
+
+import java.util.Optional;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
@@ -29,5 +33,10 @@ class UserRepositoryAdapter implements UserRepository {
         } catch (DataIntegrityViolationException e) {
             throw new EmailAlreadyRegisteredException();
         }
+    }
+
+    @Override
+    public Optional<User> findByEmail(Email email) {
+        return jpa.findByEmail(email);
     }
 }
