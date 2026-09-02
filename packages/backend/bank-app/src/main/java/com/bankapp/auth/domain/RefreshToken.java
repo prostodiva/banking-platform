@@ -61,6 +61,25 @@ public class RefreshToken {
         return revokedAt == null && moment.isBefore(expiresAt);
     }
 
+    /**
+     * A predicate, not {@code getRevokedAt()}. Revoked and expired take different
+     * paths in {@code RefreshSessionHandler} — one is a theft signal, the other is
+     * ordinary — and {@link #isUsableAt} collapses both into one boolean. The
+     * caller needs the answer, not the timestamp.
+     */
+    public boolean isRevoked() {
+        return revokedAt != null;
+    }
+
+    /**
+     * Ask the object rather than exposing the hash. The only question anyone has
+     * of a stored hash is "is this the one?", and a getter invites answering it
+     * with {@code ==} or with a comparison that leaks length.
+     */
+    public boolean matchesHash(String candidate) {
+        return tokenHash.equals(candidate);
+    }
+
     public UUID getId() {
         return id;
     }

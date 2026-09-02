@@ -7,6 +7,7 @@ import com.bankapp.auth.domain.UserRepository;
 import com.bankapp.auth.domain.exceptions.EmailAlreadyRegisteredException;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
@@ -38,5 +39,10 @@ class UserRepositoryAdapter implements UserRepository {
     @Override
     public Optional<User> findByEmail(Email email) {
         return jpa.findByEmail(email);
+    }
+
+    @Override
+    public Optional<User> findById(UUID id) {
+        return jpa.findById(id);
     }
 }

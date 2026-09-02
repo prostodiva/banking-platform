@@ -3,6 +3,7 @@ package com.bankapp.auth.application.login;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.bankapp.auth.application.AuthTokens;
 import com.bankapp.auth.application.port.IssuedToken;
 import com.bankapp.auth.application.port.PasswordHasher;
 import com.bankapp.auth.domain.Email;
@@ -16,6 +17,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class LoginHandlerTest {
@@ -56,6 +58,11 @@ class LoginHandlerTest {
             public Optional<User> findByEmail(Email email) {
                 return user;
             }
+
+            @Override
+            public Optional<User> findById(UUID id) {
+                throw new UnsupportedOperationException("login looks up by email, not id");
+            }
         };
 
         return new LoginHandler(
@@ -75,7 +82,7 @@ class LoginHandlerTest {
     void issuesBothTokensOnCorrectCredentials() {
         User user = existingUser();
 
-        LoginResult result = handlerFor(Optional.of(user))
+        AuthTokens result = handlerFor(Optional.of(user))
             .handle(new LoginCommand("Ann@Example.com", "right password"));
 
         assertThat(result.userId()).isEqualTo(user.getId());

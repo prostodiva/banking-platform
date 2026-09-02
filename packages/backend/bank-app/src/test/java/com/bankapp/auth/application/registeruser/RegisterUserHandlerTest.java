@@ -2,6 +2,7 @@ package com.bankapp.auth.application.registeruser;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.bankapp.auth.application.AuthTokens;
 import com.bankapp.auth.application.port.IssuedToken;
 import com.bankapp.auth.application.port.PasswordHasher;
 import com.bankapp.auth.domain.Email;
@@ -14,6 +15,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class RegisterUserHandlerTest {
@@ -33,6 +35,11 @@ class RegisterUserHandlerTest {
 
             @Override
             public Optional<User> findByEmail(Email email) {
+                throw new UnsupportedOperationException("register must not read users");
+            }
+
+            @Override
+            public Optional<User> findById(UUID id) {
                 throw new UnsupportedOperationException("register must not read users");
             }
         };
@@ -63,7 +70,7 @@ class RegisterUserHandlerTest {
             published::add
         );
 
-        RegisterUserResult result = handler.handle(
+        AuthTokens result = handler.handle(
             new RegisterUserCommand("Ann@Example.com", "Ann Lee", "correct horse battery")
         );
 

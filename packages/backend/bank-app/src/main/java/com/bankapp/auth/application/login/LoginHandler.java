@@ -1,6 +1,7 @@
 
 package com.bankapp.auth.application.login;
 
+import com.bankapp.auth.application.AuthTokens;
 import com.bankapp.auth.application.port.AccessTokenIssuer;
 import com.bankapp.auth.application.port.DomainEventPublisher;
 import com.bankapp.auth.application.port.IssuedToken;
@@ -41,7 +42,7 @@ public class LoginHandler {
     }
 
     @Transactional
-    public LoginResult handle(LoginCommand command) {
+    public AuthTokens handle(LoginCommand command) {
         Optional<User> found = users.findByEmail(new Email(command.email()));
 
         // Verify unconditionally. Not "if the user exists" — the whole point is
@@ -63,7 +64,7 @@ public class LoginHandler {
 
         events.publish(new UserLoggedIn(user.getId(), Instant.now()));
 
-        return new LoginResult(
+        return new AuthTokens(
             user.getId(),
             access.value(),
             refresh.value(),
