@@ -145,8 +145,11 @@ the first ADMIN is bootstrapped from the environment (ADR-004 decision 5).
 - Preconditions: valid access token; refresh token in the body
 - Postconditions: 204; that refresh token revoked. The access token stays valid until it expires
   (≤15 min) — that is inherent to stateless JWTs, not a gap
-- Errors: 401 missing/invalid access token. An unknown or already-revoked refresh token is **204**,
-  not 404 — logout is idempotent and must not report on tokens the caller may not own
+- Errors: 401 missing/invalid access token; 400 missing `refreshToken`. An unknown or
+  already-revoked refresh token is **204**, not 404 — logout is idempotent and must not report on
+  tokens the caller may not own. A refresh token belonging to **another user** is also 204 and is
+  left untouched: any other status would confirm that the token is real and owned by a real
+  account, a distinction the caller had no way to make before asking
 - Covered by: `LogoutE2ETest`
 
 Admin user management (`POST /api/admin/users`, ADR-004 decision 5) has no FR
