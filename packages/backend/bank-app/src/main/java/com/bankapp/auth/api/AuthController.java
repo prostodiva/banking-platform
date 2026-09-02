@@ -6,6 +6,10 @@ import com.bankapp.auth.api.dto.RegisterRequest;
 import com.bankapp.auth.application.registeruser.RegisterUserCommand;
 import com.bankapp.auth.application.registeruser.RegisterUserHandler;
 import com.bankapp.auth.application.registeruser.RegisterUserResult;
+import com.bankapp.auth.application.login.LoginCommand;
+import com.bankapp.auth.application.login.LoginHandler;
+import com.bankapp.auth.application.login.LoginResult;
+import com.bankapp.auth.api.dto.LoginRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,9 +23,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final RegisterUserHandler registerUser;
+    private final LoginHandler login;
 
-    public AuthController(RegisterUserHandler registerUser) {
+    public AuthController(RegisterUserHandler registerUser, LoginHandler login) {
         this.registerUser = registerUser;
+        this.login = login;
     }
 
     /**
@@ -36,4 +42,14 @@ public class AuthController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(AuthResponse.from(result));
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        LoginResult result = login.handle(
+            new LoginCommand(request.email(), request.password())
+        );
+
+        return ResponseEntity.ok(AuthResponse.from(result));
+    }
+
 }

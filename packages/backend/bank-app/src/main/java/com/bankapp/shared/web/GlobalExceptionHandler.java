@@ -2,6 +2,8 @@ package com.bankapp.shared.web;
 
 import com.bankapp.shared.domain.EntityNotFoundException;
 import com.bankapp.shared.domain.UnprocessableRequestException;
+import com.bankapp.shared.domain.UnauthorizedException;
+
 import java.util.stream.Collectors;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -12,6 +14,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
 
 /**
  * Ordered ahead of Boot's own advice on purpose. {@code
@@ -114,4 +117,27 @@ public class GlobalExceptionHandler {
         problem.setDetail(ex.getMessage());
         return problem;
     }
+
+
+    /**
+     * The only handler here that ignores the exception's own message.
+     *
+     * <p>Every other mapping passes {@code ex.getMessage()} through, because a
+     * caller who sent a bad request is entitled to know which part was bad. An
+     * unauthenticated caller is entitled to know nothing: the moment this detail
+     * varies between "no such user" and "wrong password", the login endpoint becomes
+     * a tool for enumerating registered addresses (docs/07).
+     *
+     * <p>No {@code WWW-Authenticate} header, though RFC 9110 says a 401 should carry
+     * one. There is no challenge to issue — the client is not expected to retry with
+     * an Authorization header; it is expected to show a login form.
+     */
+    @ExceptionHandler(UnauthorizedException.class)
+    ProblemDetail onUnauthorized(UnauthorizedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
+        problem.setTitle("Unauthorized");
+        problem.setDetail("Invalid email or password");
+        return problem;
+    }
+
 }
