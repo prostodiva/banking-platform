@@ -131,3 +131,20 @@ already been used revokes every session that user has.
 |---|---|
 | 400 | missing token |
 | 401 | unknown, expired, or already-revoked — identical body in all three cases |
+
+### POST /api/auth/logout
+
+**Authenticated.** `Authorization: Bearer <access token>` — the first endpoint in
+this API that requires one.
+
+Request: `{ "refreshToken": "<opaque>" }`
+Response 204: no body.
+
+Revokes that one refresh token, if it exists and belongs to the caller. Other
+devices are unaffected. The access token remains valid until it expires.
+
+| Status | When |
+|---|---|
+| 204 | revoked, OR the token is unknown, already revoked, or someone else's |
+| 400 | missing refreshToken |
+| 401 | missing, malformed, expired or badly-signed access token |

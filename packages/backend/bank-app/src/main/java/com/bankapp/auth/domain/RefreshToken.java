@@ -80,6 +80,15 @@ public class RefreshToken {
         return tokenHash.equals(candidate);
     }
 
+    /**
+     * A predicate rather than comparing {@code getUserId()} in the handler.
+     * Ownership is a question about the token, so the token answers it — and there
+     * is then exactly one place to look when someone asks how logout decides.
+     */
+    public boolean belongsTo(UUID candidate) {
+        return userId.equals(candidate);
+    }
+
     public UUID getId() {
         return id;
     }

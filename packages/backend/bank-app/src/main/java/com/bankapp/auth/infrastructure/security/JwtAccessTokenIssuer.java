@@ -35,7 +35,7 @@ class JwtAccessTokenIssuer implements AccessTokenIssuer {
         // who they are. No email, no name, no account numbers, no balances.
         JwtClaimsSet claims = JwtClaimsSet.builder()
             .issuer(properties.issuer())
-            .audience(List.of("bankapp-api"))
+            .audience(List.of(properties.audience()))
             .subject(userId.toString())
             .issuedAt(now)
             .expiresAt(expiresAt)

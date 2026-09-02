@@ -89,7 +89,7 @@ can drop tables is common. A boundary table that discusses mTLS but not
 | Failure mode | Status here | Lands in |
 |---|---|---|
 | Backend trusts client-supplied identity | **open** — `ownerId` is a request field, no ownership check on `{id}` | slice 5, NFR-11 |
-| API with no authentication | by design until slice 5 | slice 5, NFR-11 |
+| API with no authentication | **partly closed** — tokens are minted and verified, and `/api/auth/logout` is authenticated; slices 1–4 are still whitelisted in `SecurityConfig` | slice 5, NFR-11 |
 | Admin surface exposed (`/actuator/**`) | not exposed — actuator isn't a dependency yet | slice 9, NFR-12 |
 | Secrets in source or config | covered | NFR-08 |
 | No rate limiting on login / payments | not built; Redis already in compose | slice 9, NFR-14 |
