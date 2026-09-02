@@ -117,3 +117,18 @@ in the event, and putting the attempted email in one writes an unregistered
 address onto the bus. Options when fraud detection is real: a `LoginFailed`
 carrying only a hash of the attempted address, or move the whole concern to a
 structured audit log that is not an event at all.
+
+
+## Rotation makes the refresh window slide forever
+
+**Slice 5 (auth). Does not block — accepted for now.**
+
+Each refresh issues a token with a fresh 14-day expiry, so a client that refreshes
+daily is never logged out. That is the intended UX and it is also an unbounded
+session: a token stolen from a device that keeps refreshing stays alive
+indefinitely, because reuse detection only fires if the *victim* also refreshes.
+
+The fix is an absolute session lifetime — a `session_started_at` carried across
+rotations, past which no refresh is honoured regardless of the token's own expiry.
+Deferred because it needs a column and a re-login story, and because 14 days of
+sliding is a defensible product decision on its own.

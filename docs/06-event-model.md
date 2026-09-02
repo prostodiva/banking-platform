@@ -95,3 +95,13 @@ needs to, and for money the safer default is to say nothing until it is durable.
 - Consumers: none yet (fraud detection planned: login velocity;
   notifications planned: "new sign-in to your account")
 - Related: FR-AUTH-02
+
+
+**RefreshTokenReuseDetected** — auth context
+
+- Fields: `userId: UUID`, `occurredAt: Instant`
+- Published by: `RefreshSessionHandler`, only when an already-revoked token is
+  presented. The happy path publishes nothing — a refresh is not a new fact.
+- Consumers: none yet (fraud detection planned: this is the strongest signal the
+  auth context emits)
+- Related: FR-AUTH-03

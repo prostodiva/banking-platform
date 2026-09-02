@@ -1,6 +1,7 @@
 
 package com.bankapp.auth.application.registeruser;
 
+import com.bankapp.auth.application.AuthTokens;
 import com.bankapp.auth.application.port.AccessTokenIssuer;
 import com.bankapp.auth.application.port.DomainEventPublisher;
 import com.bankapp.auth.application.port.IssuedToken;
@@ -38,7 +39,7 @@ public class RegisterUserHandler {
     }
 
     @Transactional
-    public RegisterUserResult handle(RegisterUserCommand command) {
+    public AuthTokens handle(RegisterUserCommand command) {
         Email email = new Email(command.email());
         PasswordHash hash = passwordHasher.hash(command.password());
 
@@ -50,7 +51,7 @@ public class RegisterUserHandler {
 
         events.publish(new UserRegistered(user.getId(), user.getCreatedAt()));
 
-        return new RegisterUserResult(
+        return new AuthTokens(
             user.getId(),
             access.value(),
             refresh.value(),

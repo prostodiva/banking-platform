@@ -115,3 +115,19 @@ Existing refresh tokens are NOT revoked — one session per device.
 |---|---|
 | 400 | missing field, or an email that cannot be parsed |
 | 401 | bad credentials — identical body for unknown email and wrong password |
+
+
+### POST /api/auth/refresh
+
+Public. Exchanges a refresh token for a new pair, and invalidates the one presented.
+
+Request: `{ "refreshToken": "<opaque>" }`
+Response 200: the same `AuthResponse` shape.
+
+Single-use: the presented token cannot be used again. Presenting a token that has
+already been used revokes every session that user has.
+
+| Status | When |
+|---|---|
+| 400 | missing token |
+| 401 | unknown, expired, or already-revoked — identical body in all three cases |

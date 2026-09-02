@@ -126,7 +126,13 @@ public class GlobalExceptionHandler {
      * caller who sent a bad request is entitled to know which part was bad. An
      * unauthenticated caller is entitled to know nothing: the moment this detail
      * varies between "no such user" and "wrong password", the login endpoint becomes
-     * a tool for enumerating registered addresses (docs/07).
+     * a tool for enumerating registered addresses (docs/07). Refresh has the same
+     * property across unknown, expired and reused tokens.
+     *
+     * <p>The wording is deliberately generic — "credentials", not "email or
+     * password" — because two endpoints share it and refresh sends neither. Ignoring
+     * the exception's message is what keeps every 401 in this API byte-identical
+     * without anyone maintaining a shared constant.
      *
      * <p>No {@code WWW-Authenticate} header, though RFC 9110 says a 401 should carry
      * one. There is no challenge to issue — the client is not expected to retry with
@@ -136,7 +142,7 @@ public class GlobalExceptionHandler {
     ProblemDetail onUnauthorized(UnauthorizedException ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
         problem.setTitle("Unauthorized");
-        problem.setDetail("Invalid email or password");
+        problem.setDetail("Invalid credentials");
         return problem;
     }
 

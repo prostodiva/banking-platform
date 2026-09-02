@@ -131,10 +131,12 @@ the first ADMIN is bootstrapped from the environment (ADR-004 decision 5).
 - Trigger: `POST /api/auth/refresh`
 - Preconditions: refresh token exists, is unexpired and unrevoked
 - Postconditions: 200 + `AuthResponse` with a **new** access *and* refresh token; the presented
-  token is revoked (single-use rotation, ADR-004 decision 3)
+  token is revoked (single-use rotation, ADR-004 decision 3); the access token's role is re-read
+  from the user row, never carried over — a refresh token is opaque and has no claims to carry
 - Errors: 400 missing token; 401 unknown, expired or already-revoked token — a revoked token
-  presented again revokes every refresh token for that user (replay is indistinguishable from theft)
-- Covered by: `RefreshTokenE2ETest`
+  presented again revokes every refresh token for that user (replay is indistinguishable from
+  theft) and publishes `RefreshTokenReuseDetected`
+- Covered by: `RefreshSessionE2ETest`, `RefreshSessionHandlerTest`
 
 **FR-AUTH-04 — Logout**
 
