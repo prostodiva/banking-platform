@@ -159,3 +159,19 @@ is actually needed.
 **Retrofit — not an FR.** Every endpoint in slices 1–4 becomes authenticated and
 `ownerId` moves from the request body to the token `sub`. That is NFR-11, and it
 changes FR-ACC-01: the 409 unknown-owner error becomes unreachable.
+
+### FR-FRAUD-01 — Flag large payments and raise a fraud alert
+
+- **Actor:** Customer (account owner)
+- **Trigger:** A payment completes (PaymentCompleted event) whose amount
+  exceeds the large-payment threshold.
+- **Preconditions:** The account exists; the payment completed successfully;
+  the large-payment threshold is configured.
+- **Postconditions:** A fraud alert is recorded for the account owner,
+  referencing the flagged payment (payment id, amount, timestamp). The
+  payment itself is not blocked or reversed — this is detection, not
+  prevention.
+- **Errors:** If the event payload is missing required fields, the event is
+  logged and skipped — no alert is created and processing of subsequent
+  events continues.
+- **Covered by:** FraudDetectionE2ETest

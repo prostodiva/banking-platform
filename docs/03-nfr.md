@@ -110,3 +110,14 @@ stuffing.
 
 - Caching (Redis), observability/metrics (per docs/00 goals)
 - Field-level encryption, if a PII column ever appears (docs/07)
+
+
+### NFR-FRAUD-01 — Timeliness and correctness of alerts
+
+- **Detection latency:** The fraud alert is recorded within 5 seconds of the
+  payment transaction committing.
+- **Commit safety:** No alert is ever created for a payment whose transaction
+  rolled back — events are consumed only after commit.
+- **Idempotency:** If the same PaymentCompleted event is delivered more than
+  once, exactly one alert exists for that payment — duplicate deliveries do
+  not create duplicate alerts.

@@ -74,7 +74,7 @@ needs to, and for money the safer default is to say nothing until it is durable.
   payments downstream (ADR-003 decisions 5–6)
 - The only event a transfer emits — `moveMoney` fires no `MoneyWithdrawn` /
   `MoneyDeposited`, so one transfer is one fact, not three
-- Consumers: none yet — fraud detection planned (slice 6), which is when the
+- Consumers:  **fraud detection** (FR-FRAUD-01: large-payment rule) , which is when the
   in-process adapter is replaced by Kafka: payment → Kafka → fraud detection →
   notification (docs/00)
 - Related: FR-PAY-01
@@ -105,3 +105,12 @@ needs to, and for money the safer default is to say nothing until it is durable.
 - Consumers: none yet (fraud detection planned: this is the strongest signal the
   auth context emits)
 - Related: FR-AUTH-03
+
+**FraudAlertRaised** - fraud detection context
+
+- Fields: `alertId: UUID`, `transferId: UUID`, `fromAccountId: UUID`,
+  `amount: BigDecimal`, `currencyCode: String`, `occurredAt: Instant`
+- Published by: `EvaluatePaymentHandler` (fraud detection), after the alert
+  is saved, inside its transaction
+- Consumers: none yet (notifications slice planned: alert delivery)
+- Related: FR-FRAUD-01

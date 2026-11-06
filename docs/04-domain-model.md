@@ -67,3 +67,24 @@ stay in that one class; `payments` reaches them through the `AccountLedger` port
 and holds no `Account` (ADR-003 decision 1). Safe retry is likewise not an
 aggregate invariant: it is enforced by the unique index on `idempotencyKey` plus
 the handler's replay path (NFR-09).
+
+## Fraud detection context
+
+- Aggregate: **FraudAlert** — `id` (UUID), `paymentId` (UUID, unique),
+  `ownerId` (UUID), `amount` (Money), `reason` (LARGE_PAYMENT),
+  `status` (RAISED), `createdAt` (Instant).
+- Invariants (enforced inside the aggregate):
+  - created via `FraudAlert.raise(...)` only, in response to a committed
+    `PaymentCompleted` event
+  - one alert per payment — `paymentId` is unique; a duplicate event
+    creates no second alert
+  - raised only when the payment amount exceeds the large-payment
+    threshold
+  - immutable once raised — payment reference, owner, and amount never
+    change
+  - an alert never blocks, reverses, or mutates the payment — detection
+    only
+- State transitions: this slice creates alerts in `RAISED` only.
+  (Target: `RAISED` → `ACKNOWLEDGED` | `DISMISSED` in a later slice.)
+- Events: consumes `PaymentCompleted` (payments context); emits
+  `FraudAlertRaised` (once per created alert).
