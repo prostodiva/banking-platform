@@ -14,42 +14,37 @@ import com.bankapp.payments.application.transfermoney.TransferMoneyCommand;
 import com.bankapp.payments.application.transfermoney.TransferMoneyHandler;
 import com.bankapp.payments.domain.events.PaymentCompleted;
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Predicate;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.event.EventListener;
+import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * ADR-003 §5 and docs/06 promise one PaymentCompleted per <em>committed</em>
- * transfer. The listener here is a plain {@code @EventListener} on purpose: that
- * is the subscription that sees everything the publisher emits, so if events
- * escaped before commit these tests would catch it.
+ * transfer. The consumer here subscribes to the payment-completed topic with
+ * a throwaway group: that is the subscription that sees everything the
+ * publisher emits, so if events escaped before commit these tests would
+ * catch it.
  */
 @SpringBootTest
-@Import({
-    TestcontainersConfiguration.class,
-    PaymentCompletedPublicationTest.RecordingListener.class
-})
+@Import(TestcontainersConfiguration.class)
 public class PaymentCompletedPublicationTest {
 
-    static class RecordingListener {
-
-        private final List<PaymentCompleted> received = new CopyOnWriteArrayList<>();
-
-        @EventListener
-        void on(PaymentCompleted event) {
-            received.add(event);
-        }
-    }
+    private static final String TOPIC = "payment-completed";
 
     @Autowired
-    private RecordingListener listener;
+    private ConsumerFactory<Object, Object> consumerFactory;
 
     @Autowired
     private OpenAccountHandler openAccount;
@@ -66,17 +61,68 @@ public class PaymentCompletedPublicationTest {
     @Autowired
     private TransactionTemplate transactions;
 
-    private BigDecimal balanceOf(UUID accountId) {
-        return accounts.findById(accountId).orElseThrow().getBalance().amount();
-    }
+    private Consumer<Object, Object> consumer;
 
     private static final UUID DEV_USER_ID = UUID.fromString(
         "11111111-1111-1111-1111-111111111111"
     );
 
     @BeforeEach
-    void clearRecordedEvents() {
-        listener.received.clear();
+    void startConsuming() {
+        consumer = consumerFactory.createConsumer(
+            "publication-test-" + UUID.randomUUID(),
+            null
+        );
+        consumer.subscribe(List.of(TOPIC));
+    }
+
+    @AfterEach
+    void stopConsuming() {
+        consumer.close();
+    }
+
+    /** Polls until at least one matching event arrives or the timeout passes. */
+    private List<PaymentCompleted> awaitMatching(
+        Predicate<PaymentCompleted> match,
+        Duration timeout
+    ) {
+        List<PaymentCompleted> found = new ArrayList<>();
+        long deadline = System.currentTimeMillis() + timeout.toMillis();
+        while (found.isEmpty() && System.currentTimeMillis() < deadline) {
+            pollOnce(match, found, Duration.ofMillis(200));
+        }
+        return found;
+    }
+
+    /** Polls for the full window, collecting every matching event. */
+    private List<PaymentCompleted> collectDuring(
+        Predicate<PaymentCompleted> match,
+        Duration window
+    ) {
+        List<PaymentCompleted> found = new ArrayList<>();
+        long deadline = System.currentTimeMillis() + window.toMillis();
+        while (System.currentTimeMillis() < deadline) {
+            pollOnce(match, found, Duration.ofMillis(200));
+        }
+        return found;
+    }
+
+    private void pollOnce(
+        Predicate<PaymentCompleted> match,
+        List<PaymentCompleted> found,
+        Duration timeout
+    ) {
+        ConsumerRecords<Object, Object> records = consumer.poll(timeout);
+        records.forEach(record -> {
+            PaymentCompleted event = (PaymentCompleted) record.value();
+            if (match.test(event)) {
+                found.add(event);
+            }
+        });
+    }
+
+    private BigDecimal balanceOf(UUID accountId) {
+        return accounts.findById(accountId).orElseThrow().getBalance().amount();
     }
 
     private UUID account(String initialDeposit) {
@@ -106,9 +152,13 @@ public class PaymentCompletedPublicationTest {
         UUID from = account("100.00");
         UUID to = account(null);
 
-        transferMoney.handle(transfer(from, to, "25.00"));
+        var result = transferMoney.handle(transfer(from, to, "25.00"));
 
-        assertThat(listener.received)
+        List<PaymentCompleted> events = awaitMatching(
+            event -> event.transferId().equals(result.id()),
+            Duration.ofSeconds(10)
+        );
+        assertThat(events)
             .singleElement()
             .satisfies(event -> {
                 assertThat(event.fromAccountId()).isEqualTo(from);
@@ -137,7 +187,11 @@ public class PaymentCompletedPublicationTest {
             return null;
         });
 
-        assertThat(listener.received).isEmpty();
+        List<PaymentCompleted> events = collectDuring(
+            event -> event.fromAccountId().equals(from),
+            Duration.ofSeconds(3)
+        );
+        assertThat(events).isEmpty();
         assertThat(balanceOf(from)).isEqualByComparingTo("100.00");
     }
 
@@ -150,7 +204,11 @@ public class PaymentCompletedPublicationTest {
         assertThatThrownBy(() -> transferMoney.handle(transfer(from, to, "25.00")))
             .isInstanceOf(IllegalStateException.class);
 
-        assertThat(listener.received).isEmpty();
+        List<PaymentCompleted> events = collectDuring(
+            event -> event.fromAccountId().equals(from),
+            Duration.ofSeconds(3)
+        );
+        assertThat(events).isEmpty();
     }
 
     @Test
@@ -159,10 +217,14 @@ public class PaymentCompletedPublicationTest {
         UUID to = account(null);
         TransferMoneyCommand command = transfer(from, to, "25.00");
 
-        transferMoney.handle(command);
+        var result = transferMoney.handle(command);
         transferMoney.handle(command);
         transferMoney.handle(command);
 
-        assertThat(listener.received).hasSize(1);
+        Predicate<PaymentCompleted> mine =
+            event -> event.transferId().equals(result.id());
+        List<PaymentCompleted> events = awaitMatching(mine, Duration.ofSeconds(10));
+        events.addAll(collectDuring(mine, Duration.ofSeconds(2)));
+        assertThat(events).hasSize(1);
     }
 }

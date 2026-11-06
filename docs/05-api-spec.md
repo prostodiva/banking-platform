@@ -148,3 +148,27 @@ devices are unaffected. The access token remains valid until it expires.
 | 204 | revoked, OR the token is unknown, already revoked, or someone else's |
 | 400 | missing refreshToken |
 | 401 | missing, malformed, expired or badly-signed access token |
+
+
+## Fraud Detection
+
+This slice adds **no write endpoints** — alerts are created by consuming
+`PaymentCompleted` events, not by API calls. The single endpoint is
+read-only, so alerts are observable (and the E2E test can assert on them):
+
+| Method | Path | Request | Success | Errors | FR |
+|---|---|---|---|---|---|
+| GET | `/api/fraud-alerts?ownerId={uuid}` | - | 200, FraudAlertResponse[] | 400 missing or malformed ownerId | FR-FRAUD-01 |
+
+**FraudAlertResponse**:
+
+```json
+{
+  "id": "uuid",
+  "paymentId": "uuid",
+  "ownerId": "uuid",
+  "amount": 12500.00,
+  "reason": "LARGE_PAYMENT",
+  "status": "RAISED",
+  "createdAt": "2026-11-05T19:15:00Z"
+}

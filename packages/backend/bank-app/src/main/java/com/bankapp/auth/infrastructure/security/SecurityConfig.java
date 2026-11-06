@@ -45,7 +45,7 @@ class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 // TODO(NFR-11): still open. Deleting these two lines starts the
                 // retrofit.
-                .requestMatchers("/api/accounts/**", "/api/payments/**").permitAll()
+                .requestMatchers("/api/accounts/**", "/api/payments/**", "/api/fraud-alerts/**").permitAll()
                 .anyRequest().authenticated()
             )
             // Both entry points on purpose: this one answers a token that was

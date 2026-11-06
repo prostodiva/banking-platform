@@ -18,7 +18,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * publish call. Delivering on the spot would announce transfers that then rolled
  * back, which is how one retry becomes several payments downstream (ADR-003 §5).
  */
-@Component
+//@Component - remove to test kafka
 class SpringPaymentsDomainEventPublisher implements DomainEventPublisher {
 
     private final ApplicationEventPublisher delegate;
