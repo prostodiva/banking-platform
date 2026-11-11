@@ -88,3 +88,25 @@ the handler's replay path (NFR-09).
   (Target: `RAISED` → `ACKNOWLEDGED` | `DISMISSED` in a later slice.)
 - Events: consumes `PaymentCompleted` (payments context); emits
   `FraudAlertRaised` (once per created alert).
+
+
+### Notification
+
+- **Aggregate:** `Notification`
+- **Fields:**
+  - `id` — UUID
+  - `alertId` — UUID, unique (the deduplication key: one notification per alert)
+  - `recipientId` — UUID, the owner of the account the alert is about, resolved at consume time
+  - `accountId` — UUID, the `fromAccountId` carried by the event
+  - `type` — enum `NotificationType { FRAUD_ALERT }` (only type this slice)
+  - `amount` — `Money` (embedded: amount + currencyCode), copied from the alert so the notification can say what triggered it
+  - `status` — enum `NotificationStatus { SENT, FAILED }`, set by the delivery outcome
+  - `createdAt` — Instant
+- **Invariants:**
+  - Created via `Notification.forFraudAlert(...)` only, and only in response to a `FraudAlertRaised` event
+  - One notification per alert — `alertId` is unique, with the database constraint as the backstop
+  - The recipient is the account's owner, never taken from the event payload (the event carries no owner)
+  - Content is immutable once created; only `status` is set, once, by the delivery attempt
+  - A notification never blocks, reverses, or modifies the payment or the alert
+  - Delivery goes through the `NotificationChannel` port (Strategy pattern); the logging adapter is the only implementation this slice — "sent" means the log entry was written without an exception
+- **Transitions:** None this slice. `SENT` and `FAILED` are both terminal; no retry and no read/unread state yet.

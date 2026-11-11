@@ -175,3 +175,21 @@ changes FR-ACC-01: the 409 unknown-owner error becomes unreachable.
   logged and skipped — no alert is created and processing of subsequent
   events continues.
 - **Covered by:** FraudDetectionE2ETest
+
+### FR-NOT-01 — Notify the sender when a fraud alert is raised
+
+- **Actor:** System (fraud detection context, via event)
+- **Trigger:** `FraudAlertRaised` consumed from the `fraud-alert-raised` topic (alertId, transferId, fromAccountId, amount, currencyCode, occurredAt)
+- **Preconditions:** The alert was raised for a committed payment; the notifications consumer is subscribed to the topic
+- **Postconditions:** Exactly one notification is recorded for this alert, addressed to the owner of `fromAccountId`; delivery is attempted through the configured channel strategy (logging adapter ships first — "sent" means the log entry was written without an exception). The payment and the alert are never affected by the outcome — notification is a side effect, not a participant
+- **Error cases:** Duplicate delivery of the same event → no second notification (deduplication on `alertId`). Malformed event (missing required fields) → logged and skipped, no notification, subsequent events still processed. Channel failure → logged, delivery marked failed, never propagated — the listener still acks. Owner of `fromAccountId` cannot be resolved → logged and skipped
+- **Covering tests:** NotificationsE2ETest
+
+### FR-NOT-02 — List my notifications
+
+- **Actor:** Authenticated customer
+- **Trigger:** `GET /api/notifications` with a valid Bearer token
+- **Preconditions:** The caller is authenticated; the JWT subject is the user's id
+- **Postconditions:** The caller receives only their own notifications, newest first
+- **Error cases:** No token or invalid token → 401. (Owner-only by construction: the list is keyed by the token's subject, so there is no way to request another user's notifications.) A user with no notifications → 200 with an empty list
+- **Covering tests:** NotificationsE2ETest

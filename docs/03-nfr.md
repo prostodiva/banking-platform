@@ -121,3 +121,10 @@ stuffing.
 - **Idempotency:** If the same PaymentCompleted event is delivered more than
   once, exactly one alert exists for that payment — duplicate deliveries do
   not create duplicate alerts.
+
+### NFR-NOT-01 — Notification delivery guarantees
+
+- **Timeliness:** The notification is recorded within 5 seconds of the `FraudAlertRaised` event being published.
+- **Idempotency:** Kafka delivers at least once, so the same event may arrive twice. The effect is exactly one notification per alert: deduplication on `alertId`, backed by a unique constraint on the notifications table.
+- **Failure isolation:** A notification failure never propagates. Channel errors are logged and the delivery is marked failed; malformed events are logged and skipped. In both cases the listener still acks, subsequent events are still processed, and the payment and the fraud alert are unaffected.
+- **Security:** The read side is owner-only by construction — notifications are listed by the JWT subject, so no request can reach another user's notifications. Unauthenticated requests are rejected with 401.
