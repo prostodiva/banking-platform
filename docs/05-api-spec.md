@@ -172,3 +172,30 @@ read-only, so alerts are observable (and the E2E test can assert on them):
   "status": "RAISED",
   "createdAt": "2026-11-05T19:15:00Z"
 }
+```
+
+## Notifications
+
+This slice adds **no write endpoints** — notifications are created by consuming
+`FraudAlertRaised` events, not by API calls. The single endpoint is
+read-only and returns only the caller's own notifications — the recipient
+is the JWT subject, so there is no user parameter to ask for anyone else's:
+
+| Method | Path | Request | Success | Errors | FR |
+|---|---|---|---|---|---|
+| GET | `/api/notifications` | - | 200, NotificationResponse[] | 401 no token or invalid token | FR-NOT-02 |
+
+**NotificationResponse**:
+
+```json
+{
+  "id": "uuid",
+  "alertId": "uuid",
+  "accountId": "uuid",
+  "type": "FRAUD_ALERT",
+  "amount": 15000.00,
+  "currencyCode": "USD",
+  "status": "SENT",
+  "createdAt": "2026-11-11T08:45:00Z"
+}
+```

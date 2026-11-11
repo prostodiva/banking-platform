@@ -114,3 +114,14 @@ needs to, and for money the safer default is to say nothing until it is durable.
   is saved, inside its transaction
 - Consumers: none yet (notifications slice planned: alert delivery)
 - Related: FR-FRAUD-01
+
+
+### FraudAlertRaised — consumers update
+
+- **Fields:** alertId, transferId, fromAccountId, amount (BigDecimal), currencyCode, occurredAt
+- **Published by:** Fraud detection — `EvaluatePaymentHandler`, after the alert is saved, to the `fraud-alert-raised` topic (key: transferId)
+- **Consumers:** Notifications (FR-NOT-01) — records one notification for the account owner and delivers it through the configured channel. Deduplication on `alertId`: a redelivered event creates no second notification.
+
+### Notifications — published events
+
+None this slice. Notifications is a terminal consumer: it records and delivers, it does not emit.
