@@ -1,5 +1,6 @@
 # banking-platform
 
+
 A small banking backend built as a **modular monolith**: accounts, money
 transfers and JWT auth, with the module boundaries enforced by tests rather
 than by convention. Spring Boot + Postgres on the back, React on the front.
