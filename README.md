@@ -138,6 +138,19 @@ Three rules fail the build if broken:
 The point of rule 3 is slice 10: if the seams are real, extracting a context
 into its own service is a deployment change, not a rewrite.
 
+
+## Automation: every commit drafts its own LinkedIn post
+
+This repository is connected to a workflow I built with **n8n** (self-hosted on Render):
+
+1. A **GitHub webhook** fires on every push to this repo.
+2. An n8n workflow receives the push and passes the commit message and changed files to the **Google Gemini API**.
+3. Gemini drafts a short first-person LinkedIn post about the change — one engineering decision per post, in my voice.
+4. The draft is sent to me through a **Telegram bot** for review. Nothing is ever published automatically — I edit and post every draft myself.
+
+Stack: n8n · GitHub Webhooks · Google Gemini API · Telegram Bot API · Docker on Render
+
+
 ## Docs
 
 | Topic | Where |
