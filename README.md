@@ -150,7 +150,6 @@ This repository is connected to a workflow I built with **n8n** (self-hosted on 
 
 Stack: n8n · GitHub Webhooks · Google Gemini API · Telegram Bot API · Docker on Render
 
-
 ## Docs
 
 | Topic | Where |
