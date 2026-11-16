@@ -28,8 +28,8 @@ laid out in the [slice roadmap](docs/23-slice-roadmap.md).
 | 3 | Deposit / withdraw | built |
 | 4 | Transfer between accounts | built |
 | 5 | Auth — register, login, refresh, logout | built; not yet enforced on the account and payment endpoints |
-| 6 | Fraud detection (Kafka consumer) | planned |
-| 7 | Notifications | planned |
+| 6 | Fraud detection (Kafka consumer) | built |
+| 7 | Notifications | built |
 | 8 | Reports (CQRS read side) | planned |
 | 9 | Hardening — rate limiting, least-privilege DB roles, headers | planned |
 | 10 | Extraction to services | planned |
