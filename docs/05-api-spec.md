@@ -199,3 +199,36 @@ is the JWT subject, so there is no user parameter to ask for anyone else's:
   "createdAt": "2026-11-11T08:45:00Z"
 }
 ```
+
+## Reports
+
+| Method | Path | Request body | Success | Errors | FR |
+| ------ | ---- | ------------ | ------- | ------ | -- |
+| GET | `/api/reports/statements?accountId={id}&month=YYYY-MM` | - | 200, StatementResponse | 400 invalid month; 401 unauthenticated; 404 unknown account, or account belongs to another customer | FR-REP-01 |
+| GET | `/api/reports/transactions?accountId={id}&from={date}&to={date}` | - | 200, TransactionEntryResponse[] | 400 invalid date or from after to; 401 unauthenticated; 404 unknown account, or account belongs to another customer | FR-REP-02 |
+
+**StatementResponse**:
+```
+{
+  "accountId": "uuid",
+  "month": "2026-11",
+  "openingBalance": 0,
+  "closingBalance": 0,
+  "totalIn": 0,
+  "totalOut": 0,
+  "currencyCode": "USD",
+  "transactions": [ TransactionEntryResponse ]
+}
+```
+
+**TransactionEntryResponse**:
+```
+{
+  "id": "uuid",
+  "type": "DEPOSIT" | "WITHDRAWAL" | "TRANSFER_IN" | "TRANSFER_OUT",
+  "amount": 0,
+  "currencyCode": "USD",
+  "counterpartyAccountId": "uuid or null",
+  "occurredAt": "instant"
+}
+```

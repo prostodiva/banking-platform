@@ -128,3 +128,12 @@ stuffing.
 - **Idempotency:** Kafka delivers at least once, so the same event may arrive twice. The effect is exactly one notification per alert: deduplication on `alertId`, backed by a unique constraint on the notifications table.
 - **Failure isolation:** A notification failure never propagates. Channel errors are logged and the delivery is marked failed; malformed events are logged and skipped. In both cases the listener still acks, subsequent events are still processed, and the payment and the fraud alert are unaffected.
 - **Security:** The read side is owner-only by construction — notifications are listed by the JWT subject, so no request can reach another user's notifications. Unauthenticated requests are rejected with 401.
+
+**NFR-REP-01 — Report accuracy and freshness.** A report must reconcile:
+opening balance + total in − total out = closing balance, with amounts as
+`BigDecimal` (NFR-01). A committed transaction appears in reports exactly
+once, within 5 seconds of commit; a rolled-back transaction never appears.
+Enforced by: after-commit consumption only (no event is read before its
+transaction commits), a unique constraint on the source transaction id in
+the read model, and `ReportsE2ETest` asserting the reconciliation on a
+known set of transactions.
