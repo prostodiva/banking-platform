@@ -125,3 +125,23 @@ needs to, and for money the safer default is to say nothing until it is durable.
 ### Notifications — published events
 
 None this slice. Notifications is a terminal consumer: it records and delivers, it does not emit.
+
+
+**MoneyDeposited** — accounts context  [entry updated]
+
+- Fields: `eventId: UUID`, `accountId: UUID`, `ownerId: UUID`, `amount: BigDecimal`, `currencyCode: String`, `occurredAt: Instant`
+- Published by: `DepositMoneyHandler`
+- Consumers: reports — projects a DEPOSIT TransactionEntry, dedup on `eventId`
+- Related: FR-ACC-06, FR-REP-01, FR-REP-02
+
+**MoneyWithdrawn** — accounts context  [entry updated]
+
+- Fields: `eventId: UUID`, `accountId: UUID`, `ownerId: UUID`, `amount: BigDecimal`, `currencyCode: String`, `occurredAt: Instant`
+- Published by: `WithdrawMoneyHandler`
+- Consumers: reports — projects a WITHDRAWAL TransactionEntry, dedup on `eventId`
+- Related: FR-ACC-07, FR-REP-01, FR-REP-02
+
+**PaymentCompleted** — payments context  [consumers line updated]
+
+- Consumers: fraud detection; reports — projects TRANSFER_OUT on fromAccountId and TRANSFER_IN on toAccountId, dedup on `transferId` per account
+- Related: FR-PAY-01, FR-REP-01, FR-REP-02

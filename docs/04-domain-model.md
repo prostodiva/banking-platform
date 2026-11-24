@@ -110,3 +110,24 @@ the handler's replay path (NFR-09).
   - A notification never blocks, reverses, or modifies the payment or the alert
   - Delivery goes through the `NotificationChannel` port (Strategy pattern); the logging adapter is the only implementation this slice — "sent" means the log entry was written without an exception
 - **Transitions:** None this slice. `SENT` and `FAILED` are both terminal; no retry and no read/unread state yet.
+
+## Reports context (Slice 8)
+
+**TransactionEntry** — read-model projection, not an aggregate. One row per
+movement on one account, built from events; write-once, never updated.
+
+- Identity: `id` (UUID, assigned when the entry is projected)
+- State: `accountId`, `type` (DEPOSIT, WITHDRAWAL, TRANSFER_IN, TRANSFER_OUT),
+  `amount` (Money), `counterpartyAccountId` (transfers only, null otherwise),
+  `sourceId` (id of the source transaction/event, unique — the dedup key),
+  `occurredAt` (Instant)
+- Invariants:
+  - a transfer projects TWO entries: TRANSFER_OUT on the sender, TRANSFER_IN on the receiver, sharing one sourceId per account
+  - amount is always positive; direction lives in `type`, never in a signed amount
+  - duplicate delivery of the same event produces no second entry (unique sourceId per account)
+
+**Statement** — computed view, not stored. `accountId`, `month`,
+`openingBalance`, `closingBalance`, `totalIn`, `totalOut`, entries in
+chronological order. Opening balance is derived: closing balance of the
+previous month, or current balance minus all entries after the month start.
+Invariant: opening + totalIn − totalOut = closing (NFR-REP-01).

@@ -12,6 +12,8 @@ import com.bankapp.accounts.domain.AccountRepository;
 import com.bankapp.accounts.domain.events.MoneyDeposited;
 import com.bankapp.accounts.domain.exceptions.AccountNotFoundException;
 import com.bankapp.shared.domain.Money;
+import java.util.UUID;
+
 
 @Service
 public class DepositMoneyHandler {
@@ -37,6 +39,7 @@ public class DepositMoneyHandler {
         accounts.save(account);
         events.publish(
             new MoneyDeposited(
+                UUID.randomUUID(),
                 account.getId(),
                 account.getOwnerId(),
                 amount.amount(),

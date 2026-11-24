@@ -12,6 +12,8 @@ import com.bankapp.accounts.domain.AccountRepository;
 import com.bankapp.accounts.domain.events.MoneyWithdrawn;
 import com.bankapp.accounts.domain.exceptions.AccountNotFoundException;
 import com.bankapp.shared.domain.Money;
+import java.util.UUID;
+
 
 @Service
 public class WithdrawMoneyHandler {
@@ -40,6 +42,7 @@ public class WithdrawMoneyHandler {
             accounts.save(account);
             events.publish(
                 new MoneyWithdrawn(
+                    UUID.randomUUID(),
                     account.getId(),
                     account.getOwnerId(),
                     amount.amount(),

@@ -193,3 +193,24 @@ changes FR-ACC-01: the 409 unknown-owner error becomes unreachable.
 - **Postconditions:** The caller receives only their own notifications, newest first
 - **Error cases:** No token or invalid token → 401. (Owner-only by construction: the list is keyed by the token's subject, so there is no way to request another user's notifications.) A user with no notifications → 200 with an empty list
 - **Covering tests:** NotificationsE2ETest
+
+
+## Reports context
+
+**FR-REP-01 — Monthly statement**
+
+- Actor: authenticated customer
+- Trigger: `GET /api/reports/statements?accountId={id}&month=YYYY-MM`
+- Preconditions: account exists and belongs to the caller; month is a valid past or current month
+- Postconditions: 200 with statement (accountId, month, opening balance, closing balance, total in, total out, and the month's transactions in chronological order)
+- Errors: 400 invalid month format or a future month; 401 unauthenticated; 404 unknown account id, or account belongs to another customer
+- Covered by: `ReportsE2ETest`
+
+**FR-REP-02 — Transaction history**
+
+- Actor: authenticated customer
+- Trigger: `GET /api/reports/transactions?accountId={id}&from={date}&to={date}`
+- Preconditions: account exists and belongs to the caller; from and to are valid dates and from is not after to
+- Postconditions: 200 with the account's transactions in the range (deposits, withdrawals, transfers in and out), newest first; an empty range returns 200 with an empty list
+- Errors: 400 invalid date or from after to; 401 unauthenticated; 404 unknown account id, or account belongs to another customer
+- Covered by: `ReportsE2ETest`
